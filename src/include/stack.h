@@ -12,3 +12,19 @@ typedef struct stackStructure{
 
 /* Initialse the stack */
 stack *init_stack(int);
+
+/* checks whether the stack is full */
+int isFull(stack *);
+
+/* checks whether the stack is empty */
+int isEmpty(stack *);
+
+/* push data to the top of the stack */
+int push(stack *, int);
+
+/* remove and return the data at the top of the stack */
+int pop(stack *);
+
+/* return the data at the top of the stack */
+int peek(stack *);
+#endif
