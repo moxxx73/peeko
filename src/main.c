@@ -2,7 +2,7 @@
 #include <string.h> /* memcpy(), strchr() */
 #include <stdlib.h> /* malloc(), free() */
 
-#include "include/dedscan.h"
+#include "include/cafebabe.h"
 
 #define MAX_THREADS 5
 
