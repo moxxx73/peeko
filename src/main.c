@@ -63,6 +63,6 @@ int main(int argc, char *argv[]){
     }
     memcpy(target, argv[argc-1], 255);
     if(target[0] == '-') return 0;
-    dedscan_main(target, porta, portb, threads, verbose);
+    cafebabe_main(target, porta, portb, threads, verbose);
     return 0;
 }

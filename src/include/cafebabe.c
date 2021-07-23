@@ -11,7 +11,7 @@ int resolve_name(char *name, char *b){
     return -1;
 }
 
-int dedscan_main(char *target, int porta, int portb, int t, int verbose){
+int cafebabe_main(char *target, int porta, int portb, int t, int verbose){
     char addr[INET_ADDRSTRLEN];
     int r;
     if(porta <= 0){
