@@ -52,6 +52,27 @@ int setImm(int bpf){
 	return 0;
 }
 
+int setAll(int bpf, char *ifn){
+    int r;
+    r = setInterface(bpf, ifn);
+    if(r < 0){
+        return -1;
+    }
+    r = setImm(bpf);
+    if(r < 0){
+        return -1;
+    }
+    r = setPromisc(bpf);
+    if(r < 0){
+        return -1;
+    }
+    r = getLength(bpf);
+    if(r < 0){
+        return -1;
+    }
+    return r;
+}
+
 /* initialises the linked list */
 struct bpfData *initList(void){
 	struct bpfData *p;

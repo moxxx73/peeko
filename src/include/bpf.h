@@ -36,6 +36,9 @@ int setPromisc(int);
 /* set immmediate mode for the bpf device */
 int setImm(int);
 
+/* calls all the above set* functions */
+int setAll(int, char *);
+
 /* initialises the linked list */
 struct bpfData *initList(void);
 
