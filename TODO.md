@@ -1,7 +1,5 @@
 # todo list
 ____________
 - add error reporting and handling
-- finish stack implementation
-- start thread implementation
-- start work on cede.c and its header file
-
+- get an actual working beta done
+- add support for linux

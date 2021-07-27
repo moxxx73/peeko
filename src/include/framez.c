@@ -31,7 +31,7 @@ void ipv4Hdr(char *b, unsigned short l, unsigned short id, unsigned short off, u
 
 //buildTCP(pkt, a->srcPort, a->dstPort, 0x115666, 0, 5, TH_SYN, (short)a->maxLength, 0, 0);
 void tcpHdr(char *b, unsigned short sport, unsigned short dport, unsigned int seq, unsigned int ack, unsigned char off, unsigned char flags, unsigned short win, unsigned short sum, unsigned short urp){
-    struct tcphdr tcph = (struct tcphdr *)b;
+    struct tcphdr *tcph = (struct tcphdr *)b;
     tcph->th_sport = htons(sport);
     tcph->th_dport = htons(dport);
     tcph->th_seq = htonl(seq);
@@ -44,4 +44,8 @@ void tcpHdr(char *b, unsigned short sport, unsigned short dport, unsigned int se
     return;
 }
 
-
+void buildSYN(char *buffer, unsigned int src, unsigned int dst, short sport, short dport, short id){
+    ipv4Hdr(buffer, (IP_SIZE+TCP_SIZE), id, 0, 64, IPPROTO_TCP, 0, src, dst);
+    tcpHdr((buffer+IP_SIZE), sport, dport, 0x115666, 0, 0, TH_SYN, 1024, 0, 0);
+    return;
+}
