@@ -16,10 +16,10 @@
 typedef struct function_args{
     char *addr;
     char *ifn;
-    int porta;
-    int portb;
-    int portc;
-    int verbose;
+    short porta;
+    short portb;
+    short portc;
+    char verbose;
 } cafebabe;
 
 /* resolves the ip address of the provided name */

@@ -30,8 +30,8 @@ int getifaddr(char *ifn, char *b){
 
 int cafebabe_main(cafebabe *args, char *name, int t){
     int r, jpt, rm;
-    unsigned int u_src, u_dst;
     char src[INET_ADDRSTRLEN];
+    scan_a *bruh;
     if(args->porta <= 0){
         return 1;
     }
@@ -45,15 +45,28 @@ int cafebabe_main(cafebabe *args, char *name, int t){
         return 1;
     }
     if(args->verbose==1) printf("[+] Interface: %s (%s)\n", args->ifn, src);
+    bruh = (scan_a *)malloc(sizeof(scan_a));
+    if(bruh == NULL){
+        printf("[!] Failed to initialise scan_a structure\n");
+        return 1;
+    }
+    inet_pton(AF_INET, args->addr, &bruh->dst);
+    inet_pton(AF_INET, src, &bruh->src);
+    bruh->ifn = args->ifn;
+    bruh->sport = args->portc;
+    bruh->daport = args->porta;
+    bruh->dbport = args->portb;
+    bruh->verbose = args->verbose;
+    bruh->id = 0xcc73;
     if(args->portb != 0){
         r = args->portb-args->porta;
         if(r < 0) return 1;
         jpt = r/t;
         rm = r%t;
         //init_threads();
+    }else{
+        single_port(bruh);
     }
-    inet_pton(AF_INET, args->addr, &u_dst);
-    inet_pton(AF_INET, src, &u_src);
-    single_port(args->ifn, u_dst, u_src, (short)args->porta, (short)args->portc, args->verbose);
+    free(bruh);
     return 0;
 }

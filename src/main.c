@@ -26,7 +26,8 @@ int main(int argc, char *argv[]){
     char target[255];
     char ifn[] = "en0\0";
     char *arg, *tmp1, *tmp2;
-    int i=1, threads=MAX_THREADS, verbose=0;
+    int i=1, threads=MAX_THREADS;
+    char verbose=0;
     int porta=0, portb=0, x=0;
     cafebabe *args;
     if(argc < 2){
@@ -66,29 +67,29 @@ int main(int argc, char *argv[]){
                           free(tmp1);
                           free(tmp2);
                       }
+                      break;
                   }
                 case 't':
                   if((i+1) != argc){
                       arg = argv[i+1];
                       threads = atoi(arg);
                   }
+                  break;
                 case 'v':
                   verbose=1;
-            }
-        }
-        else{
-            if(argv[i-1][0] != '-'){
-                memset(target, 0, 255);
-                memcpy(target, argv[i], 255);
+                  break;
             }
         }
     }
+    memset(target, 0, 255);
+    memcpy(target, argv[argc-1], 255);
     memcpy(args->ifn, ifn, IFNAMSIZ);
-    args->porta = porta;
-    args->portb = portb;
-    args->portc = PORTC;
+    args->porta = (short)porta;
+    args->portb = (short)portb;
+    args->portc = (short)PORTC;
     args->verbose = verbose;
     if(target[0] == '-') return 0;
     cafebabe_main(args, target, threads);
+    free(args);
     return 0;
 }
