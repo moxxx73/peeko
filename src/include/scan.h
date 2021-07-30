@@ -26,9 +26,18 @@ typedef struct scanArgs{
 /* raw socket */
 int write_socket(int, int);
 
+/* used by find_rfh(), checks whether the packet is relevant */
+int checkFrames(char *, packet_d *);
+
+/* find any relevant packets in the provided bpfData */
+/* linked list and returns the count */
+int find_rfh(struct bpfData *, packet_d *);
+
 /* could i combine the read/write functions */
 /* to send a packet and simultaneously read */
 /* /dev/bpf looking for the response? */
+
+short response(int, packet_d *, int);
 
 /* just a wrapper for sendto */
 int sendData(int, packet_d *, char *, int);

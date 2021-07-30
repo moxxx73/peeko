@@ -3,12 +3,14 @@
 
 #include <netinet/tcp.h> /* struct tcphdr */
 #include <netinet/ip.h> /* struct ip */
+#include <net/ethernet.h> /* struct ether_header, ETHERTYPE_IP */
 #include <arpa/inet.h> /* htons(), ... */
 #include <stdlib.h> /* malloc(), free() */
 #include <string.h>
 
 #define IP_SIZE sizeof(struct ip)
 #define TCP_SIZE sizeof(struct tcphdr)
+#define ETH_SIZE sizeof(struct ether_header)
 
 #define SYNSIZ (IP_SIZE+TCP_SIZE)
 

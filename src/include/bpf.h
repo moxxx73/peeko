@@ -33,6 +33,9 @@ int getLength(int);
 /* sets the interface associated with the device to promiscuous */
 int setPromisc(int);
 
+/* Tells the device to only return incoming packets */
+int setRcv(int);
+
 /* set immmediate mode for the bpf device */
 int setImm(int);
 

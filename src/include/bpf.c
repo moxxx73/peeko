@@ -36,8 +36,17 @@ int getLength(int bpf){
 
 /* sets the interface associated with the device to promiscuous */
 int setPromisc(int bpf){
-	int r;
+	int r=1;
 	if(ioctl(bpf, BIOCPROMISC, &r) < 0){
+		return -1;
+	}
+	return 0;
+}
+
+/* Tells the device to only return incoming packets */
+int setRcv(int bpf){
+	int r=0;
+	if(ioctl(bpf, BIOCGSEESENT, &r) < 0){
 		return -1;
 	}
 	return 0;
@@ -45,7 +54,7 @@ int setPromisc(int bpf){
 
 /* set immmediate mode for the bpf device */
 int setImm(int bpf){
-	int r;
+	int r=1;
 	if(ioctl(bpf, BIOCIMMEDIATE, &r) < 0){
 		return -1;
 	}
@@ -54,18 +63,18 @@ int setImm(int bpf){
 
 int setAll(int bpf, char *ifn){
     int r;
-    r = setInterface(bpf, ifn);
-    if(r < 0){
+    if(setInterface(bpf, ifn) < 0){
         return -1;
     }
-    r = setImm(bpf);
-    if(r < 0){
+    if(setImm(bpf) < 0){
         return -1;
     }
-    r = setPromisc(bpf);
-    if(r < 0){
+    if(setPromisc(bpf) < 0){
         return -1;
     }
+	if(setRcv(bpf) < 0){
+		return -1;
+	}
     r = getLength(bpf);
     if(r < 0){
         return -1;
@@ -96,6 +105,7 @@ int addData(struct bpfData *p, char *data, unsigned int l){
 	c->nxt->data = (char *)malloc(l);
 	if(c->nxt->data == NULL) return -2;
 	memcpy(c->nxt->data, data, l);
+	c->nxt->nxt = NULL;
 	return 0;
 }
 
@@ -104,13 +114,14 @@ void trashAll(struct bpfData *p){
 	struct bpfData *c, *r;
 	c = p;
 	while(c != NULL){
-		if(c->data != NULL) free(c->data);
-		r = c;
-		c = c->nxt;
-		free(r);
+		if(c->data != NULL){
+			free(c->data);
+			c->data = NULL;
+		}
+		r = c->nxt;
+		free(c);
+		c = r;
 	}
-	c = NULL;
-	p->nxt = NULL;
 	return;
 }
 
@@ -133,6 +144,6 @@ int readDev(int bpf, struct bpfData *p, int blen){
 			addData(p, (ptr+bpfHdr->bh_hdrlen), bpfHdr->bh_caplen);
 			ptr += BPF_WORDALIGN(bpfHdr->bh_caplen+bpfHdr->bh_hdrlen);
 		}
-	}	
+	}
 	return b;
 }
