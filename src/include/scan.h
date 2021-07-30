@@ -22,7 +22,8 @@ typedef struct scanArgs{
 
 typedef struct threadArgs{
     scan_a args;
-    int dbport;
+    short dbport;
+    int tid;
 } thread_a;
 
 /* sure, i could just create a ethernet frame when */
@@ -43,13 +44,15 @@ int *find_rfh(struct bpfData *, packet_d *);
 
 void portState(char *);
 
+int *init_scan(char *);
+
 short response(int, packet_d *, int);
 
 /* just a wrapper for sendto */
 int sendData(int, packet_d *, char *, int);
 
 /* Just probes a single port */
-int single_port(scan_a *);
+int single_port(int, int, int, scan_a *);
 
 void *do_jobs(void *ptr);
 

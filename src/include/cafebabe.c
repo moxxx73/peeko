@@ -33,7 +33,7 @@ int getifaddr(char *ifn, char *b){
 }
 
 int cafebabe_main(cafebabe *args, char *name, int t){
-    int r=0, jpt=0, rm=0;
+    int r=0, jpt=0, rm=0, *ret_ptr;
     char src[INET_ADDRSTRLEN];
     scan_a *bruh;
     if(args->porta <= 0){
@@ -74,7 +74,15 @@ int cafebabe_main(cafebabe *args, char *name, int t){
         }
         init_threads(bruh, args->portb, t, jpt, rm);
     }else{
-        single_port(bruh);
+        ret_ptr = init_scan(args->ifn);
+        if(ret_ptr == NULL){
+            printf("[!] init_scan(): %s\n", strerror(errno));
+            return -1;
+        }
+        single_port(ret_ptr[0], ret_ptr[1], ret_ptr[2], bruh);
+        close(ret_ptr[0]);
+        close(ret_ptr[1]);
+        free(ret_ptr);
     }
     free(bruh);
     return 0;

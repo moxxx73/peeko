@@ -69,6 +69,35 @@ void portState(char *packet){
     return;
 }
 
+int *init_scan(char *ifn){
+    int r, w, blen;
+    int *ret;
+    w = write_socket(AF_INET, IPPROTO_IP);
+    if(w < 0){
+        printf("[!] write_socket(): %s\n", strerror(errno));
+        return NULL;
+    }
+    r = openDev();
+    if(r < 0){
+        printf("[!] openDev(): %s\n", strerror(errno));
+        return NULL;
+    }
+    blen = setAll(r, ifn);
+    if(blen < 0){
+        printf("[!] setAll(): %s\n", strerror(errno));
+        return NULL;
+    }
+    if(debug) printf("\t\t[Debug] Opened /dev/bpf (Buffer: %d)\n", blen);
+    ret = (int *)malloc(sizeof(int)*3);
+    if(ret != NULL){
+        ret[0] = w;
+        ret[1] = r;
+        ret[2] = blen;
+        return ret;
+    }
+    return NULL;
+}
+
 short response(int fd, packet_d *data, int blen){
     struct bpfData *packets;
     int *r, bytes, count = 0, index = -1;
@@ -112,31 +141,16 @@ int sendData(int s, packet_d *data, char *packet, int size){
 }
 
 /* not just for probing a single port but also for testing purposes */
-int single_port(scan_a *args){
-    int r, ret, w, blen;
+int single_port(int w, int r, int blen, scan_a *args){
+    int ret;
     char *packet = NULL;
     packet_d *data = NULL;
-    w = write_socket(AF_INET, IPPROTO_IP);
-    if(w < 0){
-        printf("[!] write_socket(): %s\n", strerror(errno));
-        return -1;
-    }
-    r = openDev();
-    if(r < 0){
-        printf("[!] openDev(): %s\n", strerror(errno));
-        return -1;
-    }
-    blen = setAll(r, args->ifn);
-    if(blen < 0){
-        printf("[!] setAll(): %s\n", strerror(errno));
-        return -1;
-    }
-    /* i shouldn't have to worry about this debug text when single_port() */
-    /* is called by a thread. check cafebabe.c:70 */
-    if(debug) printf("\t\t[Debug] Opened /dev/bpf (Buffer: %d)\n", blen);
+
     data = (packet_d *)malloc(sizeof(packet_d));
     if(data == NULL){
+        if(paralell) pthread_mutex_lock(&lock);
         printf("[!] Failed to allocate %lu bytes of memory\n", sizeof(packet_d));
+        if(paralell) pthread_mutex_unlock(&lock);
         return -1;
     }
     data->src = args->src;
@@ -146,33 +160,56 @@ int single_port(scan_a *args){
     data->id = args->id;
     packet = buildPacket(packet, data, SYN_METH);
     if(packet == NULL){
+        if(paralell) pthread_mutex_lock(&lock);
         printf("[!] Failed to create packet\n");
+        if(paralell) pthread_mutex_unlock(&lock);
         return -1;
     }
+    /* no need to call pthread_mutex_lock() as each thread has their own */
+    /* pair of file descriptors */
     ret = sendData(w, data, packet, SYNSIZ);
     if(ret < 0){
+        if(paralell) pthread_mutex_lock(&lock);
         printf("[!] sendData(): %s\n", strerror(errno));
+        if(paralell) pthread_mutex_unlock(&lock);
     }
+
+    /* i shouldn't have to worry about this debug text when single_port() */
+    /* is called by a thread. check cafebabe.c:70 */
     if(debug) printf("\t\t[Debug] Wrote %d bytes to socket\n", ret);
-    if(response(r, data, blen) == 0){
-            response(r, data, blen);
-    };
-    close(w);
-    close(r);
+    ret = response(r, data, blen);
     return 0;
 }
 
 void *do_jobs(void *ptr){
     thread_a *packed;
     scan_a *args;
-    int i;
+    int i, w, r, blen, *ret_ptr;
     packed = (thread_a *)(ptr);
     args = &packed->args;
+
+    ret_ptr = init_scan(args->ifn);
+    if(ret_ptr == NULL){
+        if(paralell) pthread_mutex_lock(&lock);
+        printf("[!] init_scan(): %s\n", strerror(errno));
+        if(paralell) pthread_mutex_unlock(&lock);
+        return NULL;
+    }
+    w = ret_ptr[0];
+    r = ret_ptr[1];
+    blen = ret_ptr[2];
+    free(ret_ptr);
+
     i = args->daport;
     for(;i!=packed->dbport;i++){
         args->daport = i;
-        single_port(args);
+        single_port(w, r, blen, args);
     }
+    /*pthread_mutex_lock(&lock);
+    printf("Pool[%d] - %hu\n", packed->tid, packed->dbport);
+    pthread_mutex_unlock(&lock);*/
+    close(w);
+    close(r);
     return NULL;
 }
 
@@ -180,12 +217,25 @@ void init_threads(scan_a *args, short dbport, int t, int jpt, int rm){
     pthread_t pool[t];
     thread_a **ptr;
     int i;
+    short cport;
+    cport = args->daport;
     ptr = (thread_a **)malloc(sizeof(thread_a *)*t);
     for(i=0;i<t;i++){
         ptr[i] = (thread_a *)malloc(sizeof(thread_a));
         memcpy(&ptr[i]->args, args, sizeof(scan_a));
+        ptr[i]->args.daport = cport;
+        ptr[i]->dbport = cport+(short)jpt;
+        ptr[i]->tid = i;
+        /* Give the remaining jobs to the last thread */
+        if(i == (t-1)){
+            ptr[i]->dbport += (short)rm;
+        }
+        pthread_create(&pool[i], NULL, do_jobs, (void *)ptr[i]);
+        cport += (short)jpt;
+
     }
     for(i=0;i<t;i++){
+        pthread_join(pool[i], NULL);
         free(ptr[i]);
     }
     free(ptr);
