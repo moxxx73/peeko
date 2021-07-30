@@ -48,7 +48,7 @@ void tcpHdr(char *, unsigned short, unsigned short, unsigned int, unsigned int, 
 /* builds SYN packet for TCP SYN scan (Incomplete handshake scan) */
 void buildSYN(char *, packet_d *);
 
-/* deccides what packet to create based on the provided */
+/* decides what packet to create based on the provided */
 /* scan method */
 char *buildPacket(char *, packet_d *, int);
 

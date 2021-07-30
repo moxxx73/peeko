@@ -1,4 +1,4 @@
-# cafebabe
+# 0xcafebabe
 a portscanner. thats it. (its also unfinished)  
 
 ------------
