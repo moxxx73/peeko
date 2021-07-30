@@ -125,6 +125,18 @@ void trashAll(struct bpfData *p){
 	return;
 }
 
+void *getData(struct bpfData *l, int offset){
+	struct bpfData *p;
+	int c=0;
+	p = l;
+	while(p!=NULL){
+		if(c == offset) return p->data;
+		p = p->nxt;
+		c += 1;
+	}
+	return NULL;
+}
+
 /* reads one or more packets from the bpf device */
 int readDev(int bpf, struct bpfData *p, int blen){
 	struct bpf_hdr *bpfHdr;

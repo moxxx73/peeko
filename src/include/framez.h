@@ -19,8 +19,8 @@
 /* the tcp/udp checksum uses a pseudo header as well the */
 /* tcp header to calculate the tcp/udp checksum */
 struct tcpPseudo{
-	unsigned long src;
-	unsigned long dst;
+	unsigned int src;
+	unsigned int dst;
 	unsigned short length;
 	unsigned char null;
 	unsigned char protocol;
@@ -29,8 +29,8 @@ struct tcpPseudo{
 
 /* the one stop place for packet data */
 typedef struct packetData{
-	unsigned long src;
-	unsigned long dst;
+	unsigned int src;
+	unsigned int dst;
 	short sport;
 	short dport;
 	short id;
@@ -40,7 +40,7 @@ typedef struct packetData{
 unsigned short checksum(unsigned short *, int);
 
 /* just fills in struct ip with the provided data */
-void ipv4Hdr(char *, unsigned short, unsigned short, unsigned short, unsigned char, unsigned char, unsigned short, unsigned long, unsigned long);
+void ipv4Hdr(char *, unsigned short, unsigned short, unsigned short, unsigned char, unsigned char, unsigned short, unsigned int, unsigned int);
 
 /* just fills in struct tcphdr with the provided data */
 void tcpHdr(char *, unsigned short, unsigned short, unsigned int, unsigned int, unsigned char, unsigned char, unsigned short, unsigned short, unsigned short);

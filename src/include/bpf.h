@@ -51,6 +51,8 @@ int addData(struct bpfData *, char *, unsigned int );
 /* trashes linked list */
 void trashAll(struct bpfData *);
 
+void *getData(struct bpfData *, int);
+
 /* reads one or more packets from the bpf device */
 int readDev(int, struct bpfData *, int);
 

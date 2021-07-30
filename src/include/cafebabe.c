@@ -2,6 +2,7 @@
 
 extern char verbose;
 extern char debug;
+extern char paralell;
 
 int resolve_name(char *name, char *b){
     struct hostent *r;
@@ -32,7 +33,7 @@ int getifaddr(char *ifn, char *b){
 }
 
 int cafebabe_main(cafebabe *args, char *name, int t){
-    int r, jpt, rm;
+    int r=0, jpt=0, rm=0;
     char src[INET_ADDRSTRLEN];
     scan_a *bruh;
     if(args->porta <= 0){
@@ -58,14 +59,20 @@ int cafebabe_main(cafebabe *args, char *name, int t){
     bruh->ifn = args->ifn;
     bruh->sport = args->portc;
     bruh->daport = args->porta;
-    bruh->dbport = args->portb;
     bruh->id = 0xcc73;
     if(args->portb != 0){
         r = args->portb-args->porta;
         if(r < 0) return 1;
         jpt = r/t;
         rm = r%t;
-        //init_threads();
+        if(verbose) printf("\t[+] Running %d threads with %d jobs/thread\n", t, jpt);
+        if(verbose && rm) printf("\t[+] %d jobs given to last thread\n", rm);
+        if(debug || verbose){
+            printf("\t[+] Disabling verbose/debug output\n");
+            verbose = 0;
+            debug = 0;
+        }
+        init_threads(bruh, args->portb, t, jpt, rm);
     }else{
         single_port(bruh);
     }

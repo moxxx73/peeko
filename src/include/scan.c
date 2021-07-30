@@ -2,6 +2,9 @@
 
 extern char verbose;
 extern char debug;
+extern char paralell;
+
+pthread_mutex_t lock;
 
 /* now i could just use /dev/bpf but i have to also create the ethernet */
 /* header which i just cannot be arsed doing atm */
@@ -55,9 +58,21 @@ int *find_rfh(struct bpfData *p, packet_d *info){
     return r;
 }
 
+void portState(char *packet){
+    struct tcphdr *tcp;
+    tcp = (struct tcphdr *)(packet+ETH_SIZE+IP_SIZE);
+    if(tcp->th_flags == (TH_SYN|TH_ACK)){
+        if(paralell) pthread_mutex_lock(&lock);
+        printf("\tPort %hu is open\n", ntohs(tcp->th_sport));
+        if(paralell) pthread_mutex_unlock(&lock);
+    }
+    return;
+}
+
 short response(int fd, packet_d *data, int blen){
     struct bpfData *packets;
-    int *r, bytes, count = 0;
+    int *r, bytes, count = 0, index = -1;
+    char *packet;
     packets = initList();
     if(packets == NULL){
         return 0;
@@ -66,11 +81,19 @@ short response(int fd, packet_d *data, int blen){
     //if(b > 0) printf("[+] Read %d packet(s)\n", count);
     r = find_rfh(packets, data);
     if(r != NULL){
-        if(debug == 1){
+        /*if(debug == 1){
             printf("\t\t[Debug] Got %d Response(s)\n", r[0]);
             printf("\t\t[Debug] First response at index %d\n", r[1]);
-        }
+        }*/
         count = r[0];
+        index = r[1];
+        if(count == 0){
+            free(r);
+            return count;
+        }
+        packet = (char*)getData(packets, index);
+        if(debug) printf("\t\t[Debug] Response packet @ %p\n", (void *)packet);
+        portState(packet);
         free(r);
     }
     trashAll(packets);
@@ -108,7 +131,9 @@ int single_port(scan_a *args){
         printf("[!] setAll(): %s\n", strerror(errno));
         return -1;
     }
-    if(verbose == 1) printf("\t[V] Opened /dev/bpf (Buffer: %d)\n", blen);
+    /* i shouldn't have to worry about this debug text when single_port() */
+    /* is called by a thread. check cafebabe.c:70 */
+    if(debug) printf("\t\t[Debug] Opened /dev/bpf (Buffer: %d)\n", blen);
     data = (packet_d *)malloc(sizeof(packet_d));
     if(data == NULL){
         printf("[!] Failed to allocate %lu bytes of memory\n", sizeof(packet_d));
@@ -128,11 +153,41 @@ int single_port(scan_a *args){
     if(ret < 0){
         printf("[!] sendData(): %s\n", strerror(errno));
     }
-    if(debug == 1) printf("\t\t[Debug] Wrote %d bytes to socket\n", ret);
+    if(debug) printf("\t\t[Debug] Wrote %d bytes to socket\n", ret);
     if(response(r, data, blen) == 0){
             response(r, data, blen);
     };
     close(w);
     close(r);
     return 0;
+}
+
+void *do_jobs(void *ptr){
+    thread_a *packed;
+    scan_a *args;
+    int i;
+    packed = (thread_a *)(ptr);
+    args = &packed->args;
+    i = args->daport;
+    for(;i!=packed->dbport;i++){
+        args->daport = i;
+        single_port(args);
+    }
+    return NULL;
+}
+
+void init_threads(scan_a *args, short dbport, int t, int jpt, int rm){
+    pthread_t pool[t];
+    thread_a **ptr;
+    int i;
+    ptr = (thread_a **)malloc(sizeof(thread_a *)*t);
+    for(i=0;i<t;i++){
+        ptr[i] = (thread_a *)malloc(sizeof(thread_a));
+        memcpy(&ptr[i]->args, args, sizeof(scan_a));
+    }
+    for(i=0;i<t;i++){
+        free(ptr[i]);
+    }
+    free(ptr);
+    return;
 }

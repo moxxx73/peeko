@@ -10,6 +10,7 @@
 #define IFNAMSIZ 16
 
 char verbose=0;
+char paralell=0;
 char debug=0;
 
 void usage(char *bn){
@@ -70,6 +71,7 @@ int main(int argc, char *argv[]){
                             portb = atoi(tmp2);
                             free(tmp1);
                             free(tmp2);
+                            paralell = 1;
                         }
                         break;
                     }

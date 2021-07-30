@@ -16,7 +16,7 @@ unsigned short checksum(unsigned short *p, int l){
 }
 
 /* does not need an explanation */
-void ipv4Hdr(char *b, unsigned short l, unsigned short id, unsigned short off, unsigned char ttl, unsigned char p, unsigned short sum, unsigned long src, unsigned long dst){
+void ipv4Hdr(char *b, unsigned short l, unsigned short id, unsigned short off, unsigned char ttl, unsigned char p, unsigned short sum, unsigned int src, unsigned int dst){
     struct ip *iphdr = (struct ip *)(b);
     iphdr->ip_hl = 5;
     iphdr->ip_v = 4;
