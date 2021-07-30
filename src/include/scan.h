@@ -18,7 +18,6 @@ typedef struct scanArgs{
     short daport;
     short dbport;
     short id;
-    char verbose;
 } scan_a;
 
 /* sure, i could just create a ethernet frame when */
@@ -31,7 +30,7 @@ int checkFrames(char *, packet_d *);
 
 /* find any relevant packets in the provided bpfData */
 /* linked list and returns the count */
-int find_rfh(struct bpfData *, packet_d *);
+int *find_rfh(struct bpfData *, packet_d *);
 
 /* could i combine the read/write functions */
 /* to send a packet and simultaneously read */

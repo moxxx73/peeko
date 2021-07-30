@@ -19,7 +19,6 @@ typedef struct function_args{
     short porta;
     short portb;
     short portc;
-    char verbose;
 } cafebabe;
 
 /* resolves the ip address of the provided name */

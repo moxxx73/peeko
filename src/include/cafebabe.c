@@ -1,5 +1,8 @@
 #include "cafebabe.h"
 
+extern char verbose;
+extern char debug;
+
 int resolve_name(char *name, char *b){
     struct hostent *r;
     r = gethostbyname(name);
@@ -39,12 +42,12 @@ int cafebabe_main(cafebabe *args, char *name, int t){
     if(r != 0){
         return 1;
     }
-    if(args->verbose == 1) printf("[+] Target: %s (%s)\n", name, args->addr);
+    printf("[+] Target: %s (%s)\n", name, args->addr);
     if(getifaddr(args->ifn, src) < 0){
         printf("[!] Failed to fetch interface address\n");
         return 1;
     }
-    if(args->verbose==1) printf("[+] Interface: %s (%s)\n", args->ifn, src);
+    printf("[+] Operating on interface: %s (%s)\n", args->ifn, src);
     bruh = (scan_a *)malloc(sizeof(scan_a));
     if(bruh == NULL){
         printf("[!] Failed to initialise scan_a structure\n");
@@ -56,7 +59,6 @@ int cafebabe_main(cafebabe *args, char *name, int t){
     bruh->sport = args->portc;
     bruh->daport = args->porta;
     bruh->dbport = args->portb;
-    bruh->verbose = args->verbose;
     bruh->id = 0xcc73;
     if(args->portb != 0){
         r = args->portb-args->porta;
