@@ -34,6 +34,15 @@ int devLength(int bpf){
 	return r;
 }
 
+int devTimeout(int bpf, int timeout){
+	struct timeval time;
+	int r;
+	time.tv_sec = timeout;
+	time.tv_usec = 0;
+	r = ioctl(bpf, BIOCSRTIMEOUT, &time);
+	return r;
+}
+
 /* sets the interface associated with the device to promiscuous */
 int devPromisc(int bpf){
 	int r=1;
@@ -76,21 +85,14 @@ int setFilter(int bpf, filter_data *ptr){
 	return 0;
 }
 
-int setAll(int bpf, char *ifn){
+int setAll(int bpf, char *ifn, int timeout){
 	int r;
-	if(devInterface(bpf, ifn) < 0){
-		return -1;
-	}
-	if(devImm(bpf) < 0){
-		return -1;
-	}
-	if(devPromisc(bpf) < 0){
-		return -1;
-	}
+	if(devInterface(bpf, ifn) < 0) return -1;
+	if(devImm(bpf) < 0) return -1;
+	if(devTimeout(bpf, timeout) < 0) return -1;
+	if(devPromisc(bpf) < 0) return -1;
 	r = devLength(bpf);
-	if(r < 0){
-		return -1;
-	}
+	if(r < 0) return -1;
 	return r;
 }
 

@@ -1,13 +1,14 @@
 #ifndef BPF_H
 #define BPF_H
 
-#include <poll.h>
+#include <poll.h> /* poll() */
 #include <sys/ioctl.h> /* ioctl() */
 #include <fcntl.h> /* open() */
 #include <string.h> /* memset() */
 #include <stdio.h> /* sprintf() */
 #include <stdlib.h> /* malloc(), free() */
 #include <unistd.h> /* read() */
+#include <sys/time.h> /* struct timeval */
 
 #include <net/ethernet.h> /* ETHERTYPE_IP */
 #include <netinet/ip.h> /* IPPROTO_TCP */
@@ -47,13 +48,13 @@ int devImm(int);
 int setFilter(int, filter_data *);
 
 /* calls all the above set* functions, excluding setFilter() */
-int setAll(int, char *);
+int setAll(int, char *, int);
 
 /* initialises the linked list */
 struct bpfData *initList(void);
 
 /* adds a new node to the linked list */
-int addData(struct bpfData *, char *, unsigned int );
+int addData(struct bpfData *, char *, unsigned int);
 
 /* trashes linked list */
 void trashAll(struct bpfData *);

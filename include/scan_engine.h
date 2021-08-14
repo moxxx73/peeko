@@ -11,10 +11,6 @@
 #include "raw_engine.h"
 #include "queue.h"
 
-/* defined here for now, might move em later idk*/
-#define SYN_METH 1
-#define TCP_CON 0
-
 typedef struct sniffer_args{
     unsigned int src;
     unsigned int dst;
@@ -22,11 +18,24 @@ typedef struct sniffer_args{
     queue *q;
     char *ifn;
     char method;
+    int timeout;
 } scan_p;
+
+typedef struct scan_results{
+    int packets_recvd;
+    int dropped;
+    int packets_sent;
+    int size;
+    short *open_ports;
+} results_d;
 
 int start_sniffer(scan_p *);
 
 void *sniffer(void *);
+
+int sniff(int, int, int, int);
+
+void port_state_bpf(struct bpfData *, int);
 
 void signal_handler(int);
 

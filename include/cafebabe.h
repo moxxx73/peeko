@@ -22,6 +22,7 @@ typedef struct function_args{
     char *ifn;
     short sport;
     int method;
+    int timeout;
 } cafebabe;
 
 typedef struct parse_ret{

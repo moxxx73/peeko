@@ -29,12 +29,13 @@ void help(void){
     printf("### Options ###\n");
     printf("\t-v: Enable verbose output\n");
     printf("\t-p: Specify which port(s) to scan. example: -p 80, 80-100\n");
-    printf("\t-t: Number of threads to run\n");
+    printf("\t-T: Number of threads to run\n");
     printf("\t-d: Enables output for debugging purposes\n");
     printf("\t    debug output is double indented\n");
     printf("\t-m: choose a scan method from the options provided below:\n");
     printf("\t    SYN: TCP SYN scan\n");
     printf("\t    CON: TCP connect() scan\n");
+    printf("\t-t: set timeout (seconds). Default is 5 seconds\n");
     return;
 }
 
@@ -117,6 +118,7 @@ int main(int argc, char *argv[]){
     }
     args->ifn = (char *)malloc(IFNAMSIZ);
     args->addr = (char *)malloc(INET_ADDRSTRLEN);
+    args->timeout = 5;
     for(;i<(argc-1);i++){
         if(argv[i][0] == '-'){
             switch(argv[i][1]){
@@ -125,7 +127,7 @@ int main(int argc, char *argv[]){
                         if((list = parse_port_args(argv[i+1])) == NULL) return -1;
                         break;
                     }
-                case 't':
+                case 'T':
                     if((i+1) != argc){
                         arg = argv[i+1];
                         threads = atoi(arg);
@@ -133,6 +135,11 @@ int main(int argc, char *argv[]){
                     break;
                 case 'v':
                     verbose=1;
+                    break;
+                case 't':
+                    if((i+1) != argc){
+                        args->timeout = atoi(argv[i+1]);
+                    }
                     break;
                 case 'd':
                     debug=1;

@@ -16,14 +16,13 @@ typedef struct pointer_list{
 typedef struct data_pool{
     pthread_t recv_thread;
     pthread_t write_thread;
-    int terminate;
     int recv_fd;   /* - so we can properly close the */
     int write_fd;  /*   descriptors when aborting the scan */
     int allocations; /* - The number of memory regions currently allocated */
     pointer_l *ptrs; /* - any memory allocations we have made that have */
 } pool_d;            /*   not been freed. excluding the pool itself */
 
-void clean_exit(pool_d *);
+void clean(pool_d *);
 
 void *create_pool(pool_d *);
 

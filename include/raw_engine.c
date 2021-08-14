@@ -1,7 +1,7 @@
 #include "raw_engine.h"
 
 /* just a wrapper function for now... */
-int *open_descriptor(char *ifn){
+int *open_descriptor(char *ifn, int timeout){
     int *r;
     r = (int *)malloc(sizeof(int)*2);
     if(r == NULL) return NULL;
@@ -10,7 +10,7 @@ int *open_descriptor(char *ifn){
         free(r);
         return NULL;
     }
-    r[1] = setAll(r[0], ifn);
+    r[1] = setAll(r[0], ifn, timeout);
     if(r[1] < 0){
         free(r);
         return NULL;
@@ -25,12 +25,29 @@ int set_filter(int fd, filter_data *d){
     return r;
 }
 
-int read_descriptor(int fd, int blen){
+struct bpfData *read_descriptor(int fd, int blen){
     struct bpfData *data;
-    int bytes = 0;
+    int count = 0;
+
     data = initList();
-    if(data == NULL) return -1;
-    bytes = readDev(fd, data, blen);
-    trashAll(data);
-    return bytes;
+    if(data == NULL){
+        trashAll(data);
+        return NULL;
+    }
+    /* dunno what to do with this for now */
+    count = readDev(fd, data, blen);
+    return data;
+}
+
+int _state(char *packet, int method){
+    /* filter only allows for ipv4+tcp packets */
+    struct tcphdr *tcp = (struct tcphdr *)(packet+ETHSIZ+IPSIZ);
+    switch(method){
+        case SYN_METH:
+            if(tcp->th_flags == (TH_SYN|TH_ACK)) return 1;
+            break;
+        default:
+            return 0;
+    }
+    return 0;
 }

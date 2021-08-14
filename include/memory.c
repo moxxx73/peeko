@@ -5,20 +5,17 @@ extern char underline[];
 extern char reset[];
 
 /* for whenever we get a SIGINT or an error occurs */
-void clean_exit(pool_d *pool){
-    pthread_join(pool->recv_thread, NULL);
+void clean(pool_d *pool){
+    pthread_cancel(pool->recv_thread);
     if(pool->recv_fd > 0) close(pool->recv_fd);
-    if(pool->write_fd > 0) close(pool->write_fd);
     free_ptr_list(pool->ptrs);
     free(pool);
-    exit(0);
 }
 
 void *create_pool(pool_d *pool){
     pool = (pool_d *)malloc(sizeof(pool_d));
     if(pool != NULL){
         pool->allocations = 0;
-        pool->terminate = 0;
         pool->recv_fd = -1;
         pool->write_fd = -1;
         if((pool->ptrs = (pointer_l *)malloc(sizeof(pointer_l))) != NULL){
