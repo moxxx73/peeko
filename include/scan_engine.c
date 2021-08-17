@@ -151,8 +151,8 @@ void display_results(results_d *r){
         printf(" Port %hu is open\n", r->open_ports[i]);
     }
     //printf("\n## Results ##\n");
-    if(r->packets_sent) printf("\nSent %d packets.", r->packets_sent);
-    if(r->packets_recvd) printf(" %d packets captured by filter", r->packets_recvd);
+    if(r->packets_sent) printf("\nSent %d packets. ", r->packets_sent);
+    if(r->packets_recvd) printf("%d packets captured by filter", r->packets_recvd);
     printf("\n");
     return;
 }

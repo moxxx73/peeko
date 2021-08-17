@@ -9,7 +9,7 @@
 #define SPORT 666
 #define IFNAMSIZ 16
 
-#define NAME "Cafebabe"
+#define NAME "0xCAFEBABE"
 #define BUILD "beta :)"
 
 char verbose=0;
@@ -47,6 +47,14 @@ int chr_count(char *str, char c, int len){
     return count;
 }
 
+int chr_index(char *str, char c, int len){
+    int index=0;
+    for(;index<len;index++){
+        if(str[index] == c) return index;
+    }
+    return index;
+}
+
 short *parse_list(char *list, int len, int llen){
     int i, x, no_len;
     short *ret;
@@ -79,18 +87,54 @@ short *parse_list(char *list, int len, int llen){
     return ret;
 }
 
+parse_r *parse_range(char *argv, int len){
+    parse_r *ret;
+    char *ptr;
+    int index, a, b, i, llen;
+    if((ret = (parse_r *)(malloc(sizeof(parse_r)))) == NULL) return NULL;
+    index = chr_index(argv, '-', len);
+    ptr = (char *)malloc(index+1);
+    if(ptr == NULL){
+        free(ret);
+        return NULL;
+    }
+    memcpy(ptr, argv, index);
+    a = atoi(ptr);
+    ptr = realloc(ptr, strlen(argv)-(index+1));
+    memcpy(ptr, argv+(index+1), strlen(argv)-(index+1));
+    b = atoi(ptr);
+    free(ptr);
+    llen = (b-a);
+    if(llen < 0){
+        free(ret);
+        return NULL;
+    }
+    llen += 1;
+    ret->llen = llen;
+    ret->list = (short *)malloc(llen*sizeof(short));
+    for(i=0;i<llen;i++){
+        ret->list[i] = a+i;
+    }
+    return ret;
+}
+
 parse_r *parse_port_args(char *argv){
     short *list;
     int x;
     int arg_len = strlen(argv);
     parse_r *ret;
-    if((ret = (parse_r *)malloc(sizeof(parse_r))) == NULL) return NULL;
     x = chr_count(argv, ',', arg_len);
     if(x != 0){
+        if((ret = (parse_r *)malloc(sizeof(parse_r))) == NULL) return NULL;
         x += 1;
         list = parse_list(argv, arg_len, x);
         ret->llen = x;
         ret->list = list;
+        return ret;
+    }
+    x = chr_count(argv, '-', arg_len);
+    if(x == 1){
+        ret = parse_range(argv, arg_len);
         return ret;
     }
     return NULL;
