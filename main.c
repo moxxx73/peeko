@@ -10,7 +10,7 @@
 #define IFNAMSIZ 16
 
 #define NAME "Cafebabe"
-#define BUILD "1.0.0581-alpha"
+#define BUILD "beta :)"
 
 char verbose=0;
 char debug=0;
