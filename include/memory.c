@@ -1,8 +1,10 @@
 #include "memory.h"
 
+/*
 extern char debug;
 extern char underline[];
 extern char reset[];
+*/
 
 /* for whenever we get a SIGINT or an error occurs */
 void clean_exit(pool_d *pool, int ret){

@@ -13,7 +13,7 @@
 #define BUILD "beta :)"
 
 char verbose=0;
-char debug=0;
+/* char debug=0; */
 char underline[] = "\e[4m";
 char reset[] = "\e[0m";
 
@@ -28,10 +28,12 @@ void usage(char *bn){
 void help(void){
     printf("### Options ###\n");
     printf("\t-v: Enable verbose output\n");
-    printf("\t-p: Specify which port(s) to scan. example: -p 80, 80-100\n");
+    printf("\t-p: Specify which port(s) to scan. example: -p 80, -p 80-100, -p 21,22,80 \n");
     printf("\t-T: Number of threads to run\n");
+    /*
     printf("\t-d: Enables output for debugging purposes\n");
     printf("\t    debug output is double indented\n");
+    */
     printf("\t-m: choose a scan method from the options provided below:\n");
     printf("\t    SYN: TCP SYN scan\n");
     printf("\t    CON: TCP connect() scan\n");
@@ -185,9 +187,11 @@ int main(int argc, char *argv[]){
                         args->timeout = atoi(argv[i+1]);
                     }
                     break;
+                /*
                 case 'd':
                     debug=1;
                     break;
+                */
                 case 'm':
                     if((i+1) != argc){
                         memcpy(opt_buf, argv[i+1], 3);

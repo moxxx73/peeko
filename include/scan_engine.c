@@ -2,14 +2,20 @@
 
 #include "memory.h"
 
+/*
 extern char debug;
 extern char underline[];
 extern char reset[];
+*/
 
 extern pool_d *pool;
 extern results_d *results;
 
 char retry=0;
+
+/* as of now there is no mutex locking as there are only two */
+/* threads and they both have their own data structures to */
+/* interact with */
 
 int start_sniffer(scan_p *recv_p){
     filter_data *f_data;
@@ -17,6 +23,9 @@ int start_sniffer(scan_p *recv_p){
     int fd;
     int blen;
     int *r, index;
+    /* change from previous iteration of project, without a filter applied */
+    /* we struggle to pick up our response as it probably gets pushed back */
+    /* by other packest picked up by the bpf device */
     f_data = (filter_data *)malloc(sizeof(filter_data));
     if(f_data == NULL){
         printf("Failed to allocate bpf_filter structure\n");
@@ -24,11 +33,11 @@ int start_sniffer(scan_p *recv_p){
     }
     f_data->src = recv_p->src;
     f_data->dst = recv_p->dst;
-    if(debug){
+    /*if(debug){
         printf("%s[DEBUG]%s Allocated bpf_filter @ %p\n", underline, reset, (void *)f_data);
         printf("        Source: 0x%04x\n", f_data->dst);
         printf("        Destination: 0x%04x\n", f_data->src);
-    }
+    }*/
     add_allocation(pool->ptrs, (void *)f_data);
     if((r = open_recvr(recv_p->ifn, recv_p->timeout)) == NULL){
         printf("Failed to open descriptor: %s\n", strerror(errno));
@@ -38,10 +47,10 @@ int start_sniffer(scan_p *recv_p){
     pool->recv_fd = fd;
     blen = r[1];
     free(r);
-    if(debug){
+    /*if(debug){
         printf("%s[DEBUG]%s Opened BPF device (Descriptor: %d)\n", underline, reset, fd);
         printf("        Buffer length: %d\n", blen);
-    }
+    }*/
     //if(debug) printf("\t\t%s[DEBUG]%s Calling set_filter (%p)\n", underline, reset, (void *)&set_filter);
     if(set_filter(fd, f_data) < 0){
         printf("Failed to set filter: %s\n", strerror(errno));
@@ -136,9 +145,13 @@ void *sniffer(void *data){
     int expected_responses;
     expected_responses = args->jobs;
     while((responses < expected_responses)){
+        /* if we dont pick any packets up retry up to a max. of 5x */
+        /* so that we dont just loop forever */
         if(retries == 5) break;
         new = sniff(args->fd, args->blen, (args->timeout*1000), SYN_METH);
-        if(new == 0) retries += 1;
+        if(new == 0){
+            retries += 1;
+        }
         responses += new;
         results->packets_recvd = responses;
     }
@@ -147,9 +160,12 @@ void *sniffer(void *data){
 
 void display_results(results_d *r){
     int i=0;
-    for(;i<r->size;i++){
-        printf(" Port %hu is open\n", r->open_ports[i]);
-    }
+    if(r->size){
+        printf("\n");
+        for(;i<r->size;i++){
+            printf(" Port %hu is open\n", r->open_ports[i]);
+        }
+    }else printf("\nNo open ports found...\n");
     //printf("\n## Results ##\n");
     if(r->packets_sent) printf("\nSent %d packets. ", r->packets_sent);
     if(r->packets_recvd) printf("%d packets captured by filter", r->packets_recvd);

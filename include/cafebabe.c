@@ -1,9 +1,11 @@
 #include "cafebabe.h"
 
 extern char verbose;
+/*
 extern char debug;
 extern char underline[];
 extern char reset[];
+*/
 
 pool_d *pool = NULL;
 results_d *results = NULL;
@@ -81,10 +83,10 @@ int cafebabe_main(cafebabe *args, char *name, parse_r *l, int t){
 
     scan_args = (scan_p *)malloc(sizeof(scan_p));
     if(scan_args == NULL){
-        printf("[!] Failed to initialise scan_p structure\n");
+        printf("Failed to initialise scan_p structure\n");
         clean_exit(pool, 1);
     }
-    if(debug) printf("%s[DEBUG]%s Allocated scan_p @ %p\n", underline, reset, (void *)scan_args);
+    /* if(debug) printf("%s[DEBUG]%s Allocated scan_p @ %p\n", underline, reset, (void *)scan_args); */
     add_allocation(pool->ptrs, (void *)scan_args);
 
     q = create_queue(l);
@@ -92,11 +94,13 @@ int cafebabe_main(cafebabe *args, char *name, parse_r *l, int t){
         printf("Failed to allocate memory for queue\n");
         clean_exit(pool, 1);
     }
+    /*
     if(debug){
         printf("%s[DEBUG]%s Initialised queue @ %p\n", underline, reset, (void *)q);
         printf("        Data allocated @ %p\n", (void *)q->data);
         printf("        Length: %d\n", q->size);
     }
+    */
     add_allocation(pool->ptrs, (void *)q);
 
     if((results = (results_d *)malloc(sizeof(results_d))) == NULL){
