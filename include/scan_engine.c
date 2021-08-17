@@ -160,13 +160,22 @@ void *sniffer(void *data){
 
 void display_results(results_d *r){
     int i=0;
+    char a[255], *ptr=a;
+    int x, l;
     if(r->size){
         printf("\n");
+        printf("+-------+--------+\n| Port  | State  |\n+-------+--------+\n");
         for(;i<r->size;i++){
-            printf(" Port %hu is open\n", r->open_ports[i]);
+            snprintf(a, 7, "| %hu", r->open_ports[i]);
+            l = (strlen(a));
+            for(;l!=8;l++) memcpy(ptr+l, " ", 1);
+            memcpy(ptr+l, "|", 1);
+            memcpy(ptr+l+1, " Open   |", 10);
+            printf("%s\n", a);
+            memset(a, 0, 255);
         }
+        printf("+-------+--------+\n");
     }else printf("\nNo open ports found...\n");
-    //printf("\n## Results ##\n");
     if(r->packets_sent) printf("\nSent %d packets. ", r->packets_sent);
     if(r->packets_recvd) printf("%d packets captured by filter", r->packets_recvd);
     printf("\n");

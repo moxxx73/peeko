@@ -14,8 +14,8 @@
 
 char verbose=0;
 /* char debug=0; */
-char underline[] = "\e[4m";
-char reset[] = "\e[0m";
+char underline[] = "\033[4m";
+char reset[] = "\033[0m";
 
 char opt_arr[2][4] = {"CON", "SYN"};
 char arr_len=2;
@@ -145,13 +145,14 @@ parse_r *parse_port_args(char *argv){
 int main(int argc, char *argv[]){
     char target[255];
     /* static for now, i'll add the option to change it later */
-    char ifn[] = "en0\0";
+    char ifn[16];
     char opt_buf[4];
     char *arg, method=SYN_METH;
     int x;
     int i=1, threads=MAX_THREADS;
     cafebabe *args;
     parse_r *list;
+    memcpy(ifn, "en0\0", 16);
     if(argc < 2){
         usage(argv[0]);
         help();

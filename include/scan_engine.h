@@ -4,7 +4,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h> /* malloc(), free() */
-#include <unistd.h> /* close() */
+#include <unistd.h> /* close(), write() */
 #include <string.h> /* strerror() */
 #include <pthread.h>
 
