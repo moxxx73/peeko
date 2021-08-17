@@ -1,9 +1,12 @@
 include_path = include/
 exec_path = ~/bin/
 object_files = memory.o raw_engine.o queue.o raw_net.o scan_engine.o cafebabe.o main.o bpf.o
+c_flags = -Wall -Wextra -Wpedantic -Wformat=2 -Wno-unused-parameter -Wshadow \
+          -Wwrite-strings -Wstrict-prototypes -Wold-style-definition -Wredundant-decls \
+		  -Wnested-externs -Wmissing-include-dirs
 
 cafebabe-beta: $(object_files)
-	gcc $(object_files) -o ./cafebabe-beta
+	gcc $(object_files) $(c_flags) -o ./cafebabe-beta
 	mv ./cafebabe-beta $(exec_path)/cafebabe-beta
 
 bpf.o: $(include_path)bpf.c $(include_path)bpf.h

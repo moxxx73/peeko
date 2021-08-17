@@ -125,21 +125,27 @@ parse_r *parse_port_args(char *argv){
     int x;
     int arg_len = strlen(argv);
     parse_r *ret;
+    x = chr_count(argv, '-', arg_len);
+    if(x == 1){
+        ret = parse_range(argv, arg_len);
+        return ret;
+    }
+    if((ret = (parse_r *)malloc(sizeof(parse_r))) == NULL) return NULL;
     x = chr_count(argv, ',', arg_len);
     if(x != 0){
-        if((ret = (parse_r *)malloc(sizeof(parse_r))) == NULL) return NULL;
         x += 1;
         list = parse_list(argv, arg_len, x);
         ret->llen = x;
         ret->list = list;
         return ret;
     }
-    x = chr_count(argv, '-', arg_len);
-    if(x == 1){
-        ret = parse_range(argv, arg_len);
-        return ret;
+    ret->llen = 1;
+    if((ret->list = (short *)malloc(sizeof(short))) == NULL){
+        free(ret);
+        return NULL;
     }
-    return NULL;
+    ret->list[0] = (short)atoi(argv);
+    return ret;
 }
 
 int main(int argc, char *argv[]){
