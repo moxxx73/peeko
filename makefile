@@ -4,10 +4,12 @@ object_files = memory.o raw_engine.o queue.o raw_net.o scan_engine.o cafebabe.o 
 c_flags = -Wall -Wextra -Wpedantic -Wformat=2 -Wno-unused-parameter -Wshadow \
           -Wwrite-strings -Wstrict-prototypes -Wold-style-definition -Wredundant-decls \
 		  -Wnested-externs -Wmissing-include-dirs
+exe = cafebabe
 
-cafebabe-beta: $(object_files)
-	gcc $(object_files) $(c_flags) -o ./cafebabe-beta
-	mv ./cafebabe-beta $(exec_path)/cafebabe-beta
+
+$(exe): $(object_files)
+	gcc $(object_files) $(c_flags) -o ./$(exe)
+	mv ./$(exe) $(exec_path)/$(exe)
 
 bpf.o: $(include_path)bpf.c $(include_path)bpf.h
 	gcc -c $(include_path)bpf.c
