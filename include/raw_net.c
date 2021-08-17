@@ -1,26 +1,20 @@
-#include "networkshit.h"
+#include "raw_net.h"
 
-/* now i could just use /dev/bpf but i have to also create the ethernet */
-/* header which i just cannot be arsed doing atm */
-int write_socket(int family, int protocol){
-    int s, y=1;
-    s = socket(family, SOCK_RAW, protocol);
-    if(s < 0) return -1;
-    /* yes ik, i give the option for the protocol but this call to setsockopt */
-    /* is pretty set in stone, thats temporary ok? jeeez */
-    if(setsockopt(s, IPPROTO_IP, IP_HDRINCL, &y, sizeof(y)) < 0) return -1;
-    return s;
+short get_sport(char *packet){
+    struct tcphdr *tcp;
+    short sport=0;
+    tcp = (struct tcphdr *)(packet+ETH_SIZE+IP_SIZE);
+    sport = tcp->th_sport;
+    return ntohs(sport);
 }
 
 /* Wrapper for that son of a bitch sendto() */
 int sendData(int s, packet_d *data, char *packet, int size){
     struct sockaddr_in dst;
-    int r;
     dst.sin_port = htons(data->dport);
     dst.sin_family = AF_INET;
     dst.sin_addr.s_addr = data->dst;
-    r = sendto(s, packet, size, 0, (struct sockaddr *)&dst, sizeof(struct sockaddr_in));
-    return r;
+    return sendto(s, packet, size, 0, (struct sockaddr *)&dst, sizeof(struct sockaddr_in));
 }
 
 /* TCP checksum algorithm */

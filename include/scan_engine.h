@@ -9,7 +9,6 @@
 #include <pthread.h>
 
 #include "raw_engine.h"
-#include "queue.h"
 
 typedef struct sniffer_args{
     unsigned int src;
@@ -21,21 +20,15 @@ typedef struct sniffer_args{
     int timeout;
 } scan_p;
 
-typedef struct scan_results{
-    int packets_recvd;
-    int dropped;
-    int packets_sent;
-    int size;
-    short *open_ports;
-} results_d;
-
 int start_sniffer(scan_p *);
+
+int start_writer(scan_p *, int);
+
+void *writer(void *);
 
 void *sniffer(void *);
 
-int sniff(int, int, int, int);
-
-void port_state_bpf(struct bpfData *, int);
+void display_results(results_d *);
 
 void signal_handler(int);
 

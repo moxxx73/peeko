@@ -38,10 +38,7 @@ typedef struct packetData{
 	short id;
 } packet_d;
 
-/* sure, i could just create a ethernet frame when */
-/* writing to /dev/bpf or i could just open a regular */
-/* raw socket */
-int write_socket(int, int);
+short get_sport(char *);
 
 /* just a wrapper for sendto */
 int sendData(int, packet_d *, char *, int);

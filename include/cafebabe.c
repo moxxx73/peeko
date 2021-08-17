@@ -76,12 +76,13 @@ int cafebabe_main(cafebabe *args, char *name, parse_r *l, int t){
     }
     add_allocation(pool->ptrs, (void *)l);
     add_allocation(pool->ptrs, (void *)args);
+    add_allocation(pool->ptrs, (void *)args->ifn);
+    add_allocation(pool->ptrs, (void *)args->addr);
 
     scan_args = (scan_p *)malloc(sizeof(scan_p));
     if(scan_args == NULL){
         printf("[!] Failed to initialise scan_p structure\n");
-        clean(pool);
-        exit(1);
+        clean_exit(pool, 1);
     }
     if(debug) printf("%s[DEBUG]%s Allocated scan_p @ %p\n", underline, reset, (void *)scan_args);
     add_allocation(pool->ptrs, (void *)scan_args);
@@ -89,8 +90,7 @@ int cafebabe_main(cafebabe *args, char *name, parse_r *l, int t){
     q = create_queue(l);
     if(q == NULL){
         printf("Failed to allocate memory for queue\n");
-        clean(pool);
-        exit(1);
+        clean_exit(pool, 1);
     }
     if(debug){
         printf("%s[DEBUG]%s Initialised queue @ %p\n", underline, reset, (void *)q);
@@ -101,9 +101,13 @@ int cafebabe_main(cafebabe *args, char *name, parse_r *l, int t){
 
     if((results = (results_d *)malloc(sizeof(results_d))) == NULL){
         printf("Failed to allocate memory for result structure\n");
-        clean(pool);
-        exit(1);
+        clean_exit(pool, 1);
     }
+    results->packets_sent = 0;
+    results->dropped = 0;
+    results->packets_recvd = 0;
+    results->size = 0;
+    results->open_ports = NULL;
     add_allocation(pool->ptrs, (void *)results);
 
     inet_pton(AF_INET, args->addr, &scan_args->dst);
@@ -116,7 +120,11 @@ int cafebabe_main(cafebabe *args, char *name, parse_r *l, int t){
     signal(SIGINT, signal_handler);
     if(scan_args->method > 0){
         start_sniffer(scan_args);
+        start_writer(scan_args, AF_INET);
+        pthread_join(pool->write_thread, NULL);
         pthread_join(pool->recv_thread, NULL);
     }
+    display_results(results);
+    clean_exit(pool, 0);
     return 0;
 }

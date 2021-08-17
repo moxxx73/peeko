@@ -22,7 +22,7 @@ typedef struct data_pool{
     pointer_l *ptrs; /* - any memory allocations we have made that have */
 } pool_d;            /*   not been freed. excluding the pool itself */
 
-void clean(pool_d *);
+void clean_exit(pool_d *, int);
 
 void *create_pool(pool_d *);
 
