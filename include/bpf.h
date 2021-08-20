@@ -9,6 +9,7 @@
 #include <stdlib.h> /* malloc(), free() */
 #include <unistd.h> /* read() */
 #include <sys/time.h> /* struct timeval */
+#include <poll.h>
 
 #include <net/ethernet.h> /* ETHERTYPE_IP */
 #include <netinet/ip.h> /* IPPROTO_TCP */
@@ -26,6 +27,7 @@ struct bpfData{
 typedef struct filter_data_struct{
 	unsigned int src;
 	unsigned int dst;
+	short dport;
 } filter_data;
 
 #define NODESIZ sizeof(struct bpfData)

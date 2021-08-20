@@ -67,17 +67,19 @@ int setFilter(int bpf, filter_data *ptr){
 	struct bpf_program filter;
 	struct bpf_insn program[] = {
 		BPF_STMT(BPF_LD+BPF_H+BPF_ABS, 12), /* load ether_type into the vm accumulator */
-		BPF_JUMP(BPF_JMP+BPF_JEQ+BPF_K, 0x0800, 0, 7), /* make sure we're receiving ipv4 packets */
+		BPF_JUMP(BPF_JMP+BPF_JEQ+BPF_K, 0x0800, 0, 9), /* make sure we're receiving ipv4 packets */
 		BPF_STMT(BPF_LD+BPF_B+BPF_ABS, 23), /* load ip protocol into to the accumulator */
-		BPF_JUMP(BPF_JMP+BPF_JEQ+BPF_K, IPPROTO_TCP, 0, 5), /* check whether protocol is tcp */
+		BPF_JUMP(BPF_JMP+BPF_JEQ+BPF_K, IPPROTO_TCP, 0, 7), /* check whether protocol is tcp */
 		BPF_STMT(BPF_LD+BPF_W+BPF_ABS, 26),
-		BPF_JUMP(BPF_JMP+BPF_JEQ+BPF_K, htonl(ptr->dst), 0, 3),
+		BPF_JUMP(BPF_JMP+BPF_JEQ+BPF_K, htonl(ptr->dst), 0, 5),
 		BPF_STMT(BPF_LD+BPF_W+BPF_ABS, 30),
-		BPF_JUMP(BPF_JMP+BPF_JEQ+BPF_K, htonl(ptr->src), 0, 1),
+		BPF_JUMP(BPF_JMP+BPF_JEQ+BPF_K, htonl(ptr->src), 0, 3),
+		BPF_STMT(BPF_LD+BPF_H+BPF_ABS, 36),
+		BPF_JUMP(BPF_JMP+BPF_JEQ+BPF_K, ptr->dport, 0, 1),
 		BPF_STMT(BPF_RET+BPF_K, (unsigned int)-1),
 		BPF_STMT(BPF_RET+BPF_K, 0)
 	};
-	filter.bf_len = 10;
+	filter.bf_len = 12;
 	filter.bf_insns = &program[0];
 	if(ioctl(bpf, BIOCSETF, &filter) < 0){
 		return -1;
@@ -143,7 +145,7 @@ void *getData(struct bpfData *l, int offset){
 	struct bpfData *p;
 	int c=0;
 	p = l;
-	while(p!=NULL){
+	while(p->nxt!=NULL){
 		if(c == offset) return p->data;
 		p = p->nxt;
 		c += 1;
@@ -155,7 +157,7 @@ int getLength(struct bpfData *list){
 	struct bpfData *p;
 	int x = 0;
 	p = list;
-	while(p != NULL){
+	while(p->nxt != NULL){
 		x += 1;
 		p = p->nxt;
 	}
@@ -165,13 +167,16 @@ int getLength(struct bpfData *list){
 /* reads one or more packets from the bpf device */
 int readDev(int bpf, struct bpfData *p, int blen){
 	struct bpf_hdr *bpfHdr;
+	struct pollfd pfd;
 	char *internal;
 	char *ptr;
 	int b, count=0;
-
+	pfd.fd = bpf;
+	pfd.events = POLLIN;
 	if(p == NULL) return -1;
 	internal = (char *)malloc(blen);
 	if(internal == NULL) return -2;
+	//if(!poll(&pfd, 1, 5)) return 0;
 	b = read(bpf, internal, blen);
 	if(b < 0) return -3;
 	else if(b > 0){

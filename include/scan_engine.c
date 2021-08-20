@@ -33,6 +33,7 @@ int start_sniffer(scan_p *recv_p){
     }
     f_data->src = recv_p->src;
     f_data->dst = recv_p->dst;
+    f_data->dport = recv_p->sport;
     /*if(debug){
         printf("%s[DEBUG]%s Allocated bpf_filter @ %p\n", underline, reset, (void *)f_data);
         printf("        Source: 0x%04x\n", f_data->dst);
@@ -147,7 +148,7 @@ void *sniffer(void *data){
     while((responses < expected_responses)){
         /* if we dont pick any packets up retry up to a max. of 5x */
         /* so that we dont just loop forever */
-        if(retries == 5) break;
+        if(retries == 2) break;
         new = sniff(args->fd, args->blen, (args->timeout*1000), SYN_METH);
         if(new == 0){
             retries += 1;

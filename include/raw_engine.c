@@ -69,7 +69,7 @@ void port_state_bpf(struct bpfData *data, int method){
     char *pkt;
     short sport;
     int state;
-    while(p != NULL){
+    while(p->nxt != NULL){
         pkt = p->data;
         if(pkt == NULL){
             p = p->nxt;
