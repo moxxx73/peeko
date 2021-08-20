@@ -1,6 +1,7 @@
 #include "raw_engine.h"
 
 extern results_d *results;
+extern char verbose;
 
 /* just a wrapper function for now... */
 int *open_recvr(char *ifn, int timeout){
@@ -78,6 +79,7 @@ void port_state_bpf(struct bpfData *data, int method){
         state = _state(pkt, method);
         if(state > 0){
             sport = get_sport(pkt);
+            if(verbose) printf("    + Port %hu is open\n", sport);
             add_sport(results, sport);
         }
         p = p->nxt;
