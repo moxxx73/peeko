@@ -13,10 +13,8 @@
 #define BUILD "beta :)"
 
 char verbose=0;
-/* char debug=0; */
 char underline[] = "\033[4m";
 char reset[] = "\033[0m";
-
 char opt_arr[2][4] = {"CON", "SYN"};
 char arr_len=2;
 
