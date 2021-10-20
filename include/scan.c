@@ -1,4 +1,4 @@
-#include "scan_engine.h"
+#include "scan.h"
 
 #include "memory.h"
 
@@ -39,8 +39,8 @@ int start_sniffer(scan_p *recv_p){
         printf("        Source: 0x%04x\n", f_data->dst);
         printf("        Destination: 0x%04x\n", f_data->src);
     }*/
-    add_allocation(pool->ptrs, (void *)f_data);
-    if((r = open_recvr(recv_p->ifn, recv_p->timeout)) == NULL){
+    add_allocation(pool, (void *)f_data, FILTER_SIZ, "filter\0");
+    if((r = open_recvr(recv_p->ifn, recv_p->timeout, recv_p->family)) == NULL){
         printf("Failed to open descriptor: %s\n", strerror(errno));
         clean_exit(pool, 1);
     }
@@ -58,7 +58,7 @@ int start_sniffer(scan_p *recv_p){
         clean_exit(pool, 1);
     }
     index = get_ptr_index(pool->ptrs, (void *)f_data);
-    remove_allocation(pool->ptrs, index);
+    remove_allocation(pool, index);
     free(f_data);
     if((sniff_d = (sniffer_d *)malloc(sizeof(sniffer_d))) == NULL){
         printf("Failed to allocate sniffer_d structure\n");
@@ -66,15 +66,15 @@ int start_sniffer(scan_p *recv_p){
     }
     sniff_d->fd = fd;
     sniff_d->blen = blen;
-    sniff_d->jobs = recv_p->q->size;
+    sniff_d->jobs = recv_p->stk->frame_size;
     sniff_d->method = recv_p->method;
     sniff_d->timeout = recv_p->timeout;
-    add_allocation(pool->ptrs, (void *)sniff_d);
+    add_allocation(pool, (void *)sniff_d, RECV_A_SIZ, "Rthread\0");
     pthread_create(&pool->recv_thread, NULL, sniffer, (void *)sniff_d);
     return 0;
 }
 
-int start_writer(scan_p *args, int family){
+int start_writer(scan_p *args){
     int fd;
     int protocol;
     writer_d *write_d;
@@ -82,7 +82,7 @@ int start_writer(scan_p *args, int family){
         printf("Failed to create writer_d structure\n");
         clean_exit(pool, 1);
     }
-    add_allocation(pool->ptrs, (void *)write_d);
+    add_allocation(pool, (void *)write_d, WRITE_A_SIZ, "Wthread\0");
     switch(args->method){
         case SYN_METH:
             protocol = IPPROTO_TCP;
@@ -91,7 +91,7 @@ int start_writer(scan_p *args, int family){
             protocol = 0;
             break;
     }
-    fd = open_writer(family, protocol);
+    fd = open_writer(args->family, protocol);
     if(fd < 0){
         printf("Failed to open socket\n");
         printf("- %s\n", strerror(errno));
@@ -99,7 +99,7 @@ int start_writer(scan_p *args, int family){
     }
     pool->write_fd = fd;
     write_d->fd = fd;
-    write_d->q = args->q;
+    write_d->st = args->stk;
     write_d->src = args->src;
     write_d->dst = args->dst;
     write_d->id = 0xcc73;
@@ -114,28 +114,27 @@ void *writer(void *data){
     packet_d *packet_data;
     short dport=0;
     char *packet=NULL;
-    int r;
     packet_data = (packet_d *)malloc(sizeof(packet_d));
     if(packet_data == NULL){
         return NULL;
     }
-    add_allocation(pool->ptrs, (void *)packet_data);
+    add_allocation(pool, (void *)packet_data, PACKET_D_SIZ, "packet-data\0");
     packet_data->sport = write_d->sport;
     packet_data->dport = dport;
     packet_data->src = write_d->src;
     packet_data->dst = write_d->dst;
     packet_data->id = write_d->id;
-    while(!isEmpty(write_d->q)){
-        dport = pop(write_d->q);
+    while(!stack_empty(write_d->st)){
+        dport = pop(write_d->st);
         packet_data->dport = dport;
         if(((packet = buildPacket(packet, packet_data, write_d->method))) == NULL){
             return NULL;
         }
-        r = sendData(write_d->fd, packet_data, packet, IP_SIZE+TCP_SIZE);
+        sendData(write_d->fd, packet_data, packet, IP_SIZE+TCP_SIZE);
         free(packet);
         results->packets_sent += 1;
     }
-    remove_allocation(pool->ptrs, get_ptr_index(pool->ptrs, packet_data));
+    remove_allocation(pool, get_ptr_index(pool->ptrs, packet_data));
     free(packet_data);
     return NULL;
 }
@@ -159,6 +158,7 @@ void *sniffer(void *data){
     return NULL;
 }
 
+/*
 void display_results(results_d *r){
     int i=0;
     char a[255], *ptr=a;
@@ -182,9 +182,10 @@ void display_results(results_d *r){
     printf("\n");
     return;
 }
+*/
 
 void signal_handler(int signal){
     //printf("\nCaught Interrupt...\n");
-    display_results(results);
+    //display_results(results);
     clean_exit(pool, 130);
 }

@@ -24,12 +24,6 @@ struct bpfData{
 	struct bpfData *nxt;
 };
 
-typedef struct filter_data_struct{
-	unsigned int src;
-	unsigned int dst;
-	short dport;
-} filter_data;
-
 #define NODESIZ sizeof(struct bpfData)
 
 /* opens a /dev/bpf device file */
@@ -46,8 +40,6 @@ int devPromisc(int);
 
 /* set immmediate mode for the bpf device */
 int devImm(int);
-
-int setFilter(int, filter_data *);
 
 /* calls all the above set* functions, excluding setFilter() */
 int setAll(int, char *, int);

@@ -1,4 +1,4 @@
-#include "raw_net.h"
+#include "packets.h"
 
 short get_sport(char *packet){
     struct tcphdr *tcp;
@@ -97,17 +97,15 @@ char *buildPacket(char *b, packet_d *ptr, int method){
     return b;
 }
 
-/* deprecated function */
-int checkFrames(char *data, packet_d *info){
-    struct ip *iph;
-    struct ether_header *eth;
-    //struct tcphdr *tcph;
-    eth = (struct ether_header *)(data);
-    if(ntohs(eth->ether_type) != ETHERTYPE_IP) return -1;
-    iph = (struct ip *)(data+ETH_SIZE);
-    if(iph->ip_src.s_addr == info->dst && iph->ip_dst.s_addr == info->src){
-        if(iph->ip_p != IPPROTO_TCP) return -1;
-        return 0;
+int _state(char *packet, int method){
+    /* filter only allows for ipv4+tcp packets */
+    struct tcphdr *tcp = (struct tcphdr *)(packet+ETHSIZ+IPSIZ);
+    switch(method){
+        case SYN_METH:
+            if(tcp->th_flags == (TH_SYN|TH_ACK)) return 1;
+            break;
+        default:
+            return 0;
     }
-    return -1;
+    return 0;
 }

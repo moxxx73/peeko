@@ -8,27 +8,32 @@
 #include <string.h> /* strerror() */
 #include <pthread.h>
 
-#include "raw_engine.h"
+#include "low_net.h"
 
 typedef struct sniffer_args{
     unsigned int src;
     unsigned int dst;
     short sport;
-    queue *q;
+    stack *stk;
     char *ifn;
     char method;
+    int family;
     int timeout;
 } scan_p;
 
+#define SCAN_SIZ sizeof(scan_p)
+
 int start_sniffer(scan_p *);
 
-int start_writer(scan_p *, int);
+int start_writer(scan_p *);
 
 void *writer(void *);
 
 void *sniffer(void *);
 
+/*
 void display_results(results_d *);
+*/
 
 void signal_handler(int);
 
