@@ -17,6 +17,9 @@ typedef struct parse_ret{
     int llen;
 } parse_r;
 
+#define PRT_LST_SIZ sizeof(parse_r)
+#define PRT_LST_TAG "prt_lst\0"
+ 
 /* resolves the ip address of the provided name */
 int resolve_name(char *, char *);
 

@@ -21,6 +21,7 @@ typedef struct filter_data_struct{
 } filter_data;
 
 #define FILTER_SIZ sizeof(filter_data)
+#define FILTER_TAG "filter_data\0"
 
 int set_filter(int, filter_data *);
 

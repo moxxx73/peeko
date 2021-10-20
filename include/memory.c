@@ -36,7 +36,7 @@ void *create_pool(pool_d *pool){
 }
 
 /* allocates space for the new pointer being appended to the array */
-void *add_allocation(pool_d *p, void *ptr, short size, char *id){
+void *add_allocation(pool_d *p, void *ptr, short size, char *tag){
     pointer_l *x;
     x = p->ptrs;
     //if(debug) printf("\t\t%s[DEBUG]%s Adding %p to pool\n", underline, reset, ptr);
@@ -48,7 +48,7 @@ void *add_allocation(pool_d *p, void *ptr, short size, char *id){
         x->next->prev = x;
         x->next->ptr = ptr;
         x->next->size = size;
-        memcpy(x->next->id, id, PTR_ID_SIZ);
+        memcpy(x->next->tag, tag, PTR_TAG_SIZ);
         x->next->next = NULL;
         p->allocated += size;
         p->allocations += 1;
@@ -69,13 +69,13 @@ int get_ptr_index(pointer_l *p, void *ptr){
     return -1;
 }
 
-int get_id_index(pointer_l *p, char *id){
+int get_tag_index(pointer_l *p, char *tag){
     pointer_l *x;
     int index;
     x = p;
     index = 0;
     while(!x){
-        if(strncmp(x->id, id, PTR_ID_SIZ) == 0){
+        if(strncmp(x->tag, tag, PTR_TAG_SIZ) == 0){
             return index;
         }
         index += 1;
@@ -94,11 +94,11 @@ pointer_l *ptr_via_index(pointer_l *p, void *ptr){
     return NULL;
 }
 
-pointer_l *ptr_via_id(pointer_l *p, char *id){
+pointer_l *ptr_via_tag(pointer_l *p, char *tag){
     pointer_l *x;
     x = p;
     while(!x){
-        if(strncmp(x->id, id, PTR_ID_SIZ) == 0){
+        if(strncmp(x->tag, tag, PTR_TAG_SIZ) == 0){
             return x;
         }
         x = x->next;
@@ -111,10 +111,12 @@ void display_ptrs(pool_d *p){
     int index = 0;
     x = p->ptrs;
     while(x != NULL){
-        printf("Index: %d @ %p\n", index, (void *)x);
-        printf("\t- Previous = %p\n", (void *)x->prev);
-        printf("\t- Pointer = %p\n", (void *)x->ptr);
-        printf("\t- Next = %p\n", (void *)x->next);
+        printf("\nIndex: %d @ %p\n", index, x);
+        printf("    Previous item: %p\n", x->prev);
+        printf("    Chunk pointer: %p\n", x->ptr);
+        printf("    Chunk tag: %s\n", x->tag);
+        printf("    Chunk size: %d\n", x->size);
+        printf("    Next item: %p\n", x->next);
         index += 1;
         x = x->next;
     }
@@ -152,5 +154,13 @@ void free_ptr_list(pointer_l *ptr){
         x = x->next;
         free(y);
     }
+    return;
+}
+
+void display_stats(pool_d *p){
+    printf("\nMemory pool @ %p\n", p);
+    printf("    Total No. of allocations: %d\n", p->allocations);
+    printf("    Memory currently allocated: %d Bytes\n", p->allocated);
+    printf("    Memory freed: %d Bytes\n", p->freed);
     return;
 }

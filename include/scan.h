@@ -10,7 +10,7 @@
 
 #include "low_net.h"
 
-typedef struct sniffer_args{
+typedef struct scan_args{
     unsigned int src;
     unsigned int dst;
     short sport;
@@ -22,6 +22,7 @@ typedef struct sniffer_args{
 } scan_p;
 
 #define SCAN_SIZ sizeof(scan_p)
+#define SCAN_ARGS_TAG "scan_args\0"
 
 int start_sniffer(scan_p *);
 

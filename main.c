@@ -8,8 +8,8 @@
 #define MAX_THREADS 5
 #define SPORT 666
 
-#define NAME "0xCAFEBABE"
-#define BUILD "beta :)"
+#define NAME "Cafebabe"
+#define VERSION "73-201021-b465"
 
 #if __APPLE__
     #define IFN_NAME "en0\0"
@@ -105,7 +105,7 @@ int main(int argc, char *argv[]){
             }
         }
     }
-    printf("%s | Build: %s\n", NAME, BUILD);
+    printf("%s | Version: %s\n", NAME, VERSION);
     if(method > TCP_CON && getuid() != 0){
         printf("The scan method being used requires that u run this binary as root\n");
         printf("sorrryyy...\n");

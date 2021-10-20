@@ -1,11 +1,6 @@
 #include "cafebabe.h"
 
 extern char verbose;
-/*
-extern char debug;
-extern char underline[];
-extern char reset[];
-*/
 
 pool_d *pool = NULL;
 results_d *results = NULL;
@@ -42,8 +37,8 @@ int cafebabe_main(cafebabe *args, char *name, parse_r *l, int t){
         free(args);
         exit(1);
     }
-    add_allocation(pool, (void *)l, sizeof(parse_r), "listp\0");
-    add_allocation(pool, (void *)args, SCAN_SIZ, "scan_args\0");
+    add_allocation(pool, (void *)l, sizeof(parse_r), PRT_LST_TAG);
+    add_allocation(pool, (void *)args, CAFEBABE_SIZ, CAFEBABE_TAG);
     add_allocation(pool, (void *)args->ifn, IFNAMSIZ, "interface\0");
     add_allocation(pool, (void *)args->addr, INET_ADDRSTRLEN, "address\0");
 
@@ -52,8 +47,7 @@ int cafebabe_main(cafebabe *args, char *name, parse_r *l, int t){
         printf("Failed to initialise scan_p structure\n");
         clean_exit(pool, 1);
     }
-    /* if(debug) printf("%s[DEBUG]%s Allocated scan_p @ %p\n", underline, reset, (void *)scan_args); */
-    add_allocation(pool, (void *)scan_args, SCAN_SIZ, "scan-args\0");
+    add_allocation(pool, (void *)scan_args, SCAN_SIZ, SCAN_ARGS_TAG);
 
     stck = alloc_stack(l->llen);
     if(stck == NULL){
@@ -61,25 +55,17 @@ int cafebabe_main(cafebabe *args, char *name, parse_r *l, int t){
         clean_exit(pool, 1);
     }
     if(fill_stack(l, stck) < 0){
-        // handle_err();
         printf("[!] List is larger than stack size\n");
         return -1;
     }
     remove_allocation(pool, get_ptr_index(pool->ptrs, (void *)l));
-    /*
-    if(debug){
-        printf("%s[DEBUG]%s Initialised queue @ %p\n", underline, reset, (void *)q);
-        printf("        Data allocated @ %p\n", (void *)q->data);
-        printf("        Length: %d\n", q->size);
-    }
-    */
-    add_allocation(pool, (void *)stck, STACK_HDR_SIZ, "stk-hdr\0");
+    add_allocation(pool, (void *)stck, STACK_HDR_SIZ, STACK_HDR_TAG);
 
     if((results = init_results()) == NULL){
         printf("Failed to allocate memory for result structure\n");
         clean_exit(pool, 1);
     }
-    add_allocation(pool, (void *)results, RESULTS_SIZ, "results\0");
+    add_allocation(pool, (void *)results, RESULTS_SIZ, RESULTS_TAG);
 
     inet_pton(AF_INET, args->addr, &scan_args->dst);
     inet_pton(AF_INET, src_str, &scan_args->src);
@@ -96,6 +82,8 @@ int cafebabe_main(cafebabe *args, char *name, parse_r *l, int t){
         pthread_join(pool->write_thread, NULL);
         pthread_join(pool->recv_thread, NULL);
     }*/
+    display_stats(pool);
+    display_ptrs(pool);
     clean_exit(pool, 0);
     return 0;
 }

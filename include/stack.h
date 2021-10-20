@@ -10,6 +10,7 @@ typedef struct stack_header{
 } stack;
 
 #define STACK_HDR_SIZ sizeof(stack)
+#define STACK_HDR_TAG "stack_hdr\0"
 
 stack *alloc_stack(int);
 
