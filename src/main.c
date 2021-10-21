@@ -14,12 +14,11 @@
 #if __APPLE__
     #define IFN_NAME "en0\0"
 #else
-    #define IFN_NAME "wlp3s0\0"
+    //#define IFN_NAME "wlp3s0\0"
+    #define IFN_NAME "lo\0" 
 #endif
 
 char verbose=0;
-char underline[] = "\033[4m";
-char reset[] = "\033[0m";
 
 void usage(char *bn){
     printf("Usage: %s [options] address/hostname\n", bn);

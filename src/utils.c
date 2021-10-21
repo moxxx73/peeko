@@ -1,14 +1,19 @@
 #include "../include/utils.h"
 
+char underline[] = "\033[4m";
+char reset[] = "\033[0m";
+char red_c[] = "\033[31m";
+char reverse_c[] = "\033[7m";
+
 int resolve_name(char *name, char *b){
     struct hostent *r;
     r = gethostbyname(name);
     if(r != NULL){
         if(inet_ntop(AF_INET, ((struct sockaddr_in *)r->h_addr_list[0]), b, INET_ADDRSTRLEN) != NULL){
-            return 0;
+            return 1;
         }
     }
-    return -1;
+    return 0;
 }
 
 int getifaddr(char *ifn, char *b){
@@ -16,18 +21,18 @@ int getifaddr(char *ifn, char *b){
     int s;
 
     s = socket(AF_INET, SOCK_STREAM, 0);
-    if(s < 0) return -1;
+    if(s < 0) return 0;
     ifr.ifr_addr.sa_family = AF_INET;
     memcpy(ifr.ifr_name, ifn, IFNAMSIZ);
 
     if(ioctl(s, SIOCGIFADDR, &ifr) < 0){
-        return -1;
+        return 0;
     }
     close(s);
     if(inet_ntop(AF_INET, &((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr, b, INET_ADDRSTRLEN) == NULL){
-        return -1;
+        return 0;
     }
-    return 0;
+    return 1;
 }
 
 int chr_count(char *str, char c, int len){
@@ -135,6 +140,15 @@ parse_r *parse_port_args(char *argv){
     }
     ret->list[0] = (short)atoi(argv);
     return ret;
+}
+
+void err_msg(char *msg){
+    char internal_buf[ERR_MSG_LEN];
+    snprintf(internal_buf, ERR_MSG_LEN, "%s%s[!]%s %s: %s\n", red_c, reverse_c, reset, msg, strerror(errno));
+    strncpy(ERR_BUF, internal_buf, ERR_MSG_LEN);
+    printf("%s", ERR_BUF);
+    memset(ERR_BUF, 0, ERR_MSG_LEN);
+    return;
 }
 
 /*char *default_interface(void){

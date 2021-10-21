@@ -27,6 +27,8 @@ typedef struct scan_args{
 #define SCAN_SIZ sizeof(scan_p)
 #define SCAN_ARGS_TAG "scan_args\0"
 
+int scan_mgr(scan_p *);
+
 int start_sniffer(scan_p *);
 
 int start_writer(scan_p *);

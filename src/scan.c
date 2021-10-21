@@ -13,6 +13,19 @@ extern results_d *results;
 
 char retry=0;
 
+
+int scan_mgr(scan_p *scan_data){
+    switch(scan_data->method){
+        case HANDSHAKE_SCAN:
+            //connect_scan(scan_data);
+            break;
+        default:
+            //raw_scan(scan_data);
+            break;
+    }
+    return 0;
+}
+
 /* as of now there is no mutex locking as there are only two */
 /* threads and they both have their own data structures to */
 /* interact with */

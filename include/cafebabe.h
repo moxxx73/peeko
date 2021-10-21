@@ -24,6 +24,6 @@ typedef struct function_args{
 #define CAFEBABE_TAG "cafebabe_args\0"
 
 /* just the "main" function that'll probs branch off */
-int cafebabe_main(cafebabe *, char*, parse_r *, int);
+void cafebabe_main(cafebabe *, char*, parse_r *, int);
 
 #endif

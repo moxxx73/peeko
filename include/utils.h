@@ -3,6 +3,8 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
+#include <errno.h>
 #include <netdb.h> /* gethostbyname() */
 #include <unistd.h> /* close() */
 #include <sys/socket.h> /* AF_INET, ... */
@@ -11,7 +13,6 @@
 #include <sys/ioctl.h> /* ioctl() */
 #include <ifaddrs.h>
 
-
 typedef struct parse_ret{
     short *list;
     int llen;
@@ -19,7 +20,11 @@ typedef struct parse_ret{
 
 #define PRT_LST_SIZ sizeof(parse_r)
 #define PRT_LST_TAG "prt_lst\0"
- 
+
+#define ERR_MSG_LEN 256
+char err_msg_buf[ERR_MSG_LEN];
+#define ERR_BUF err_msg_buf
+
 /* resolves the ip address of the provided name */
 int resolve_name(char *, char *);
 
@@ -35,6 +40,8 @@ short *parse_list(char *, int, int);
 parse_r *parse_range(char *, int);
 
 parse_r *parse_port_args(char *);
+
+void err_msg(char *);
 
 //char *default_interface(void);
 

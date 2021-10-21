@@ -15,24 +15,26 @@ int fill_stack(parse_r *lst, stack *st){
 
 /* the "staging area", just does a lot of the setup such as */
 /* creating the main data pool and our result structure in the heap */
-int cafebabe_main(cafebabe *args, char *name, parse_r *l, int t){
+void cafebabe_main(cafebabe *args, char *name, parse_r *l, int t){
     int r=0;
     char src_str[INET_ADDRSTRLEN];
     scan_p *scan_args = NULL;
     stack *stck = NULL;
+    memset(ERR_BUF, 0, ERR_MSG_LEN);
     r = resolve_name(name, args->addr);
-    if(r != 0){
-        return 1;
+    if(!r){
+        err_msg("cafebabe_main()");
+        exit(1);
     }
 
-    if(getifaddr(args->ifn, src_str) < 0){
-        printf("[!] Failed to fetch interface address\n");
+    if(!getifaddr(args->ifn, src_str)){
+        err_msg("getifaddr()");
         exit(1);
     }
     printf("Operating on interface: %s (%s)\n", args->ifn, src_str);
 
     if((pool = create_pool(pool)) == NULL){
-        printf("Failed to allocate pool memory\n");
+        err_msg("create_pool()");
         free(l);
         free(args);
         exit(1);
@@ -56,7 +58,7 @@ int cafebabe_main(cafebabe *args, char *name, parse_r *l, int t){
     }
     if(fill_stack(l, stck) < 0){
         printf("[!] List is larger than stack size\n");
-        return -1;
+        clean_exit(pool, 1);
     }
     remove_allocation(pool, get_ptr_index(pool->ptrs, (void *)l));
     add_allocation(pool, (void *)stck, STACK_HDR_SIZ, STACK_HDR_TAG);
@@ -76,14 +78,10 @@ int cafebabe_main(cafebabe *args, char *name, parse_r *l, int t){
     scan_args->family = AF_INET;
 
     signal(SIGINT, signal_handler);
-    /*if(scan_args->method > 0){
-        start_sniffer(scan_args);
-        start_writer(scan_args);
-        pthread_join(pool->write_thread, NULL);
-        pthread_join(pool->recv_thread, NULL);
-    }*/
+
+    scan_mgr(scan_args);
+
     display_stats(pool);
     display_ptrs(pool);
     clean_exit(pool, 0);
-    return 0;
 }
