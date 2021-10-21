@@ -1,4 +1,4 @@
-#include "stack.h"
+#include "../include/stack.h"
 
 stack *alloc_stack(int size){
     stack *r = NULL;

@@ -1,4 +1,4 @@
-#include "packets.h"
+#include "../include/packets.h"
 
 short get_sport(char *packet){
     struct tcphdr *tcp;

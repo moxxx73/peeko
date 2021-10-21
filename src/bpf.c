@@ -1,4 +1,4 @@
-#include "bpf.h"
+#include "../include/bpf.h"
 
 /* opens a /dev/bpf device file */
 int openDev(void){

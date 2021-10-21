@@ -3,7 +3,7 @@
 #include <string.h> /* memcpy(), strchr() */
 #include <stdlib.h> /* malloc(), free() */
 
-#include "include/cafebabe.h"
+#include "../include/cafebabe.h"
 
 #define MAX_THREADS 5
 #define SPORT 666
@@ -33,10 +33,6 @@ void help(void){
     printf("\t-v: Enable verbose output\n");
     printf("\t-p: Specify which port(s) to scan. example: -p 80, -p 80-100, -p 21,22,80 \n");
     printf("\t-T: Number of threads to run\n");
-    /*
-    printf("\t-d: Enables output for debugging purposes\n");
-    printf("\t    debug output is double indented\n");
-    */
     printf("\t-m: choose a scan method from the options provided below:\n");
     printf("\t    SYN: TCP SYN scan\n");
     printf("\t    CON: TCP connect() scan\n");

@@ -1,4 +1,4 @@
-#include "memory.h"
+#include "../include/memory.h"
 
 /*
 extern char debug;

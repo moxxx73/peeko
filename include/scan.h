@@ -9,6 +9,7 @@
 #include <pthread.h>
 
 #include "low_net.h"
+#include "memory.h"
 
 typedef struct scan_args{
     unsigned int src;
@@ -31,10 +32,6 @@ int start_writer(scan_p *);
 void *writer(void *);
 
 void *sniffer(void *);
-
-/*
-void display_results(results_d *);
-*/
 
 void signal_handler(int);
 

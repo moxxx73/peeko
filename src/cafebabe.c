@@ -1,4 +1,4 @@
-#include "cafebabe.h"
+#include "../include/cafebabe.h"
 
 extern char verbose;
 

@@ -1,4 +1,4 @@
-#include "utils.h"
+#include "../include/utils.h"
 
 int resolve_name(char *name, char *b){
     struct hostent *r;

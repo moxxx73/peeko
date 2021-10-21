@@ -1,4 +1,4 @@
-#include "net_filter.h"
+#include "../include/net_filter.h"
 
 /* simple filter that checks that we are receiving the */
 /* correct packets, makes later check functions redundant */
