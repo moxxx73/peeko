@@ -18,8 +18,7 @@
 #include <netinet/in.h> /* IPPROTO_IP, ... */
 
 /* defined here for now, might do some moving around later idk*/
-#define SYN_METH 1
-#define TCP_CON 0
+#define SYNCHRONISE_SCAN 0x0002
 
 typedef struct sniffer_struct{
     int fd;

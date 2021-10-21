@@ -20,8 +20,6 @@
 char verbose=0;
 char underline[] = "\033[4m";
 char reset[] = "\033[0m";
-char opt_arr[2][4] = {"CON", "SYN"};
-char arr_len=2;
 
 void usage(char *bn){
     printf("Usage: %s [options] address/hostname\n", bn);
@@ -30,32 +28,30 @@ void usage(char *bn){
 
 void help(void){
     printf("### Options ###\n");
-    printf("\t-v: Enable verbose output\n");
-    printf("\t-p: Specify which port(s) to scan. example: -p 80, -p 80-100, -p 21,22,80 \n");
-    printf("\t-T: Number of threads to run\n");
-    printf("\t-m: choose a scan method from the options provided below:\n");
-    printf("\t    SYN: TCP SYN scan\n");
-    printf("\t    CON: TCP connect() scan\n");
-    printf("\t-t: set timeout (seconds). Default is 5 seconds\n");
+    printf("  -v: Enable verbose output\n");
+    printf("  -p: Specify which port(s) to scan. example: -p 80, -p 80-100, -p 21,22,80 \n");
+    printf("  -T: Number of threads to run\n");
+    printf("  -t: set timeout (seconds). Default is 5 seconds\n");
+    printf("\n### Scan Method ###\n");
+    printf("  -sS: TCP SYN\n");
+    printf("  -sC: TCP Connect()\n");
+    printf("\n");
     return;
 }
 
 int main(int argc, char *argv[]){
     char target[255];
-    /* static for now, i'll add the option to change it later */
     char ifn[16];
-    char opt_buf[4];
-    char *arg, method=SYN_METH;
-    int x;
+    char *arg, method=HANDSHAKE_SCAN;
     int i=1, threads=MAX_THREADS;
     cafebabe *args;
     parse_r *list;
-    memcpy(ifn, IFN_NAME, 16);
     if(argc < 2){
         usage(argv[0]);
         help();
         return 0;
     }
+    memcpy(ifn, IFN_NAME, 16);
     args = (cafebabe *)malloc(sizeof(cafebabe));
     if(args == NULL){
         printf("[!] failed to allocate memory for cafebabe structure\n");
@@ -86,23 +82,26 @@ int main(int argc, char *argv[]){
                         args->timeout = atoi(argv[i+1]);
                     }
                     break;
-                /*
-                case 'd':
-                    debug=1;
-                    break;
-                */
-                case 'm':
-                    if((i+1) != argc){
-                        memcpy(opt_buf, argv[i+1], 3);
-                        for(x=0;x<arr_len;x++){
-                            if(strncmp(opt_buf, opt_arr[x], 3) == 0) method = (char)x;
+                case 's':
+                    if(strlen(argv[i]) > 2){
+                        method ^= method;
+                        switch(argv[i][2]){
+                            case 'S':
+                                method = method^SYNCHRONISE_SCAN;
+                                break;
+                            case 'C':
+                                method = method^HANDSHAKE_SCAN;
+                                break;
                         }
+                    }else{
+                        printf("Scan method was not provided\n");
+                        return 1;
                     }
             }
         }
     }
     printf("%s | Version: %s\n", NAME, VERSION);
-    if(method > TCP_CON && getuid() != 0){
+    if(!(method&HANDSHAKE_SCAN) && getuid() > 0){
         printf("The scan method being used requires that u run this binary as root\n");
         printf("sorrryyy...\n");
         free(args->ifn);

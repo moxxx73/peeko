@@ -11,6 +11,8 @@
 #include "low_net.h"
 #include "memory.h"
 
+#define HANDSHAKE_SCAN 0x0001
+
 typedef struct scan_args{
     unsigned int src;
     unsigned int dst;
