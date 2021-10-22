@@ -2,12 +2,6 @@
 
 #include "memory.h"
 
-/*
-extern char debug;
-extern char underline[];
-extern char reset[];
-*/
-
 extern pool_d *pool;
 extern results_d *results;
 
@@ -17,7 +11,7 @@ char retry=0;
 int scan_mgr(scan_p *scan_data){
     switch(scan_data->method){
         case HANDSHAKE_SCAN:
-            //connect_scan(scan_data);
+            connect_scan(scan_data);
             break;
         default:
             //raw_scan(scan_data);
@@ -29,6 +23,42 @@ int scan_mgr(scan_p *scan_data){
 /* as of now there is no mutex locking as there are only two */
 /* threads and they both have their own data structures to */
 /* interact with */
+
+int connect_scan(scan_p *scan_data){
+    struct sockaddr_in dst;
+    stack *st_ptr;
+    int sock;
+    int addr_sz;
+    int i;
+    short dport;
+
+    st_ptr = scan_data->stk;
+    dst.sin_family = scan_data->family;
+
+    if(dst.sin_family == AF_INET) addr_sz = INET_ADDRSTRLEN;
+    else addr_sz = INET6_ADDRSTRLEN;
+    memcpy(&dst.sin_addr.s_addr, &scan_data->dst, addr_sz);
+    
+    for(i=0;i<st_ptr->frame_size;i++){
+        dport = pop(st_ptr);
+        if(dport < 0){
+            return 0;
+        }
+        dst.sin_port = htons(dport);
+        sock = socket(scan_data->family, SOCK_STREAM, 0);
+        if(sock < 0){
+            err_msg("socket()");
+            return 0;
+        }
+        if(connect(sock, (struct sockaddr *)&dst, sizeof(struct sockaddr_in)) == 0){
+            add_open_port(results, dport);
+        }
+        shutdown(sock, SHUT_RDWR);
+        close(sock);
+        sock = -1;        
+    }
+    return 1;
+}
 
 int start_sniffer(scan_p *recv_p){
     filter_data *f_data;

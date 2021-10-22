@@ -10,6 +10,7 @@
 
 #include "low_net.h"
 #include "memory.h"
+#include "utils.h"
 
 #define HANDSHAKE_SCAN 0x0001
 
@@ -28,6 +29,8 @@ typedef struct scan_args{
 #define SCAN_ARGS_TAG "scan_args\0"
 
 int scan_mgr(scan_p *);
+
+int connect_scan(scan_p *);
 
 int start_sniffer(scan_p *);
 

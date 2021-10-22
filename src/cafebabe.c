@@ -81,7 +81,8 @@ void cafebabe_main(cafebabe *args, char *name, parse_r *l, int t){
 
     scan_mgr(scan_args);
 
-    display_stats(pool);
-    display_ptrs(pool);
+    //display_stats(pool);
+    //display_ptrs(pool);
+    display_results(results);
     clean_exit(pool, 0);
 }

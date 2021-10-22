@@ -2,6 +2,7 @@
 #define RESULTS_H
 
 #include <stdlib.h>
+#include <stdio.h>
 
 typedef struct scan_results{
     int packets_recvd;
@@ -21,6 +22,8 @@ results_d *init_results();
 int add_open_port(results_d *, short);
 
 int add_closed_port(results_d *, short);
+
+void display_results(results_d *);
 
 void asc_sort(void);
 

@@ -99,7 +99,7 @@ int main(int argc, char *argv[]){
             }
         }
     }
-    printf("%s | Version: %s\n", NAME, VERSION);
+    printf("%s Version: %s\n", NAME, VERSION);
     if(!(method&HANDSHAKE_SCAN) && getuid() > 0){
         printf("The scan method being used requires that u run this binary as root\n");
         printf("sorrryyy...\n");
