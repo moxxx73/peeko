@@ -37,7 +37,7 @@ int connect_scan(scan_p *scan_data){
 
     if(dst.sin_family == AF_INET) addr_sz = INET_ADDRSTRLEN;
     else addr_sz = INET6_ADDRSTRLEN;
-    memcpy(&dst.sin_addr.s_addr, &scan_data->dst, addr_sz);
+    dst.sin_addr.s_addr = scan_data->dst;
     
     for(i=0;i<st_ptr->frame_size;i++){
         dport = pop(st_ptr);

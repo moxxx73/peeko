@@ -14,8 +14,7 @@
 #if __APPLE__
     #define IFN_NAME "en0\0"
 #else
-    //#define IFN_NAME "wlp3s0\0"
-    #define IFN_NAME "lo\0" 
+    #define IFN_NAME "wlp3s0\0"
 #endif
 
 char verbose=0;
