@@ -22,8 +22,6 @@ typedef struct parse_ret{
 #define PRT_LST_TAG "prt_lst\0"
 
 #define ERR_MSG_LEN 256
-char err_msg_buf[ERR_MSG_LEN];
-#define ERR_BUF err_msg_buf
 
 /* resolves the ip address of the provided name */
 int resolve_name(char *, char *);

@@ -143,11 +143,9 @@ parse_r *parse_port_args(char *argv){
 }
 
 void err_msg(char *msg){
-    char internal_buf[ERR_MSG_LEN];
-    snprintf(internal_buf, ERR_MSG_LEN, "%s%s[!]%s %s: %s\n", red_c, reverse_c, reset, msg, strerror(errno));
-    strncpy(ERR_BUF, internal_buf, ERR_MSG_LEN);
-    printf("%s", ERR_BUF);
-    memset(ERR_BUF, 0, ERR_MSG_LEN);
+    char err_buf[ERR_MSG_LEN];
+    snprintf(err_buf, ERR_MSG_LEN, "%s%s[!]%s %s: %s\n", red_c, reverse_c, reset, msg, strerror(errno));
+    printf("%s", err_buf);
     return;
 }
 

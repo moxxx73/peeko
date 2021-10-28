@@ -20,18 +20,18 @@ void cafebabe_main(cafebabe *args, char *name, parse_r *l, int t){
     char src_str[INET_ADDRSTRLEN];
     scan_p *scan_args = NULL;
     stack *stck = NULL;
-    memset(ERR_BUF, 0, ERR_MSG_LEN);
     r = resolve_name(name, args->addr);
     if(!r){
         err_msg("cafebabe_main()");
         exit(1);
     }
-
-    if(!getifaddr(args->ifn, src_str)){
-        err_msg("getifaddr()");
-        exit(1);
+    if(!(args->method&HANDSHAKE_SCAN)){
+        if(!getifaddr(args->ifn, src_str)){
+            err_msg("getifaddr()");
+            exit(1);
+        }
+        printf("Operating on interface: %s (%s)\n", args->ifn, src_str);
     }
-    printf("Operating on interface: %s (%s)\n", args->ifn, src_str);
 
     if((pool = create_pool(pool)) == NULL){
         err_msg("create_pool()");
