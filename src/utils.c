@@ -5,18 +5,32 @@ char reset[] = "\033[0m";
 char red_c[] = "\033[31m";
 char reverse_c[] = "\033[7m";
 
-int resolve_name(char *name, char *b){
+/*---------------------------------------------------------*/
+/* Retrieves the IPv4 address of a hostname                */
+/*     name: The hostname                                  */
+/*     buf: The buffer to store the resultant IPv4 address */
+/*                                                         */
+/* Returns 1 if no errors occurred                         */
+/*---------------------------------------------------------*/
+int resolve_name(char *name, char *buf){
     struct hostent *r;
     r = gethostbyname(name);
     if(r != NULL){
-        if(inet_ntop(AF_INET, ((struct sockaddr_in *)r->h_addr_list[0]), b, INET_ADDRSTRLEN) != NULL){
+        if(inet_ntop(AF_INET, ((struct sockaddr_in *)r->h_addr_list[0]), buf, INET_ADDRSTRLEN) != NULL){
             return 1;
         }
     }
     return 0;
 }
 
-int getifaddr(char *ifn, char *b){
+/*---------------------------------------------------------*/
+/* Retrieves the IPv4 address associated with an interface */
+/*     ifn: Interface name                                 */
+/*     buf: buffer to store IPv4 address                   */
+/*                                                         */
+/* Returns 1 if no errors occurred                         */
+/*---------------------------------------------------------*/
+int getifaddr(char *ifn, char *buf){
     struct ifreq ifr;
     int s;
 
@@ -29,7 +43,7 @@ int getifaddr(char *ifn, char *b){
         return 0;
     }
     close(s);
-    if(inet_ntop(AF_INET, &((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr, b, INET_ADDRSTRLEN) == NULL){
+    if(inet_ntop(AF_INET, &((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr, buf, INET_ADDRSTRLEN) == NULL){
         return 0;
     }
     return 1;
@@ -142,18 +156,44 @@ parse_r *parse_port_args(char *argv){
     return ret;
 }
 
-void err_msg(char *msg){
+void err_msg(const char *msg){
     char err_buf[ERR_MSG_LEN];
     snprintf(err_buf, ERR_MSG_LEN, "%s%s[!]%s %s: %s\n", red_c, reverse_c, reset, msg, strerror(errno));
     printf("%s", err_buf);
     return;
 }
 
-/*char *default_interface(void){
-    struct ifaddrs *ifp, *ptr;
-    if(getifaddrs(&ifp) < 0){
-        return -1;
+void hex_dump(unsigned char *data, int length){
+    int c=0;
+    int x=0;
+    int y=0;
+    int z=0;
+    unsigned char ch;
+    while(c < length){
+        for(;x<6;x++){
+            if((c+x) >= length) break;
+            printf("%02x ", data[c+x]);
+        }
+        z = x;
+        if(x != 6){
+            for(;x<6;x++){
+                printf("   ");
+            }
+        }
+        printf("| ");
+        for(;y<z;y++){
+            ch = data[c+y];
+            if(32 <= ch && ch < 127){
+                printf("%c", ch);
+            }
+            else{
+                printf(".");
+            }
+        }
+        printf("\n");
+        c += x;
+        x = 0;
+        y = 0;
+
     }
-    
-    return 0;
-}*/
+}

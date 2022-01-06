@@ -1,6 +1,6 @@
 #include "../include/results.h"
 
-results_d *init_results(){
+results_d *init_results(void){
     results_d *ret;
     ret = (results_d *)malloc(RESULTS_SIZ);
     if(ret){

@@ -8,15 +8,6 @@ short get_sport(char *packet){
     return ntohs(sport);
 }
 
-/* Wrapper for that son of a bitch sendto() */
-int sendData(int s, packet_d *data, char *packet, int size){
-    struct sockaddr_in dst;
-    dst.sin_port = htons(data->dport);
-    dst.sin_family = AF_INET;
-    dst.sin_addr.s_addr = data->dst;
-    return sendto(s, packet, size, 0, (struct sockaddr *)&dst, sizeof(struct sockaddr_in));
-}
-
 /* TCP checksum algorithm */
 /* the bane of my fucking life */
 unsigned short checksum(unsigned short *p, int l){
@@ -63,10 +54,7 @@ void tcpHdr(char *b, unsigned short sport, unsigned short dport, unsigned int se
     tcph->th_urp = htons(urp);
     return;
 }
-
-/* constructs a tcp packet with a syn flag */
-/* allocates memory (size: SYNSIZ) and fills */
-/* buffer with the data provided in ptr */
+/*
 void buildSYN(char *buffer, packet_d *ptr){
     struct tcphdr *tcp;
     struct tcpPseudo pseudo;
@@ -81,21 +69,7 @@ void buildSYN(char *buffer, packet_d *ptr){
     memcpy(&pseudo.tcp, tcp, TCP_SIZE);
     tcp->th_sum = checksum((unsigned short *)&pseudo, sizeof(pseudo));
     return;
-}
-
-/* deccides what packet to create based on the provided */
-/* scan method */
-char *buildPacket(char *b, packet_d *ptr, int method){
-    switch(method){
-        case SYN_METH:
-            b = (char *)malloc(SYNSIZ);
-            memset(b, 0, SYNSIZ);
-            if(b == NULL) return NULL;
-            buildSYN(b, ptr);
-            break;
-    }
-    return b;
-}
+}*/
 
 int _state(char *packet, int method){
     /* filter only allows for ipv4+tcp packets */

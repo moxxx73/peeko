@@ -12,6 +12,8 @@
 #include "memory.h"
 #include "utils.h"
 
+/* just a basic structure to keep the */
+/* amount of function args passed to cafebabe_main() */
 typedef struct function_args{
     char *addr;
     char *ifn;

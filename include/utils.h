@@ -39,8 +39,8 @@ parse_r *parse_range(char *, int);
 
 parse_r *parse_port_args(char *);
 
-void err_msg(char *);
+void err_msg(const char *);
 
-//char *default_interface(void);
+void hex_dump(unsigned char *, int);
 
 #endif

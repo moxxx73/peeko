@@ -8,11 +8,13 @@
 #include <string.h> /* strerror() */
 #include <pthread.h>
 
-#include "low_net.h"
+#include "net.h"
 #include "memory.h"
 #include "utils.h"
+#include "stack.h"
 
-#define HANDSHAKE_SCAN 0x0001
+#define HANDSHAKE_SCAN 0x01
+#define SYN_SCAN 0x02
 
 typedef struct scan_args{
     unsigned int src;
@@ -21,24 +23,18 @@ typedef struct scan_args{
     stack *stk;
     char *ifn;
     char method;
-    int family;
-    int timeout;
+    unsigned int family;
+    unsigned int timeout;
 } scan_p;
 
 #define SCAN_SIZ sizeof(scan_p)
 #define SCAN_ARGS_TAG "scan_args\0"
 
-int scan_mgr(scan_p *);
+int scan_mgr(scan_data *, int);
 
-int connect_scan(scan_p *);
+int connect_scan(scan_data *);
 
-int start_sniffer(scan_p *);
-
-int start_writer(scan_p *);
-
-void *writer(void *);
-
-void *sniffer(void *);
+int raw_scan(scan_data *, int);
 
 void signal_handler(int);
 

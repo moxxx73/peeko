@@ -35,21 +35,7 @@ struct tcpPseudo{
 	struct tcphdr tcp;
 };
 
-/* the one stop place for packet data */
-typedef struct packetData{
-	unsigned int src;
-	unsigned int dst;
-	short sport;
-	short dport;
-	short id;
-} packet_d;
-
-#define PACKET_D_SIZ sizeof(packet_d)
-
 short get_sport(char *);
-
-/* just a wrapper for sendto */
-int sendData(int, packet_d *, char *, int);
 
 /*TCP checksum algorithm*/
 unsigned short checksum(unsigned short *, int);
@@ -59,13 +45,6 @@ void ipv4Hdr(char *, unsigned short, unsigned short, unsigned short, unsigned ch
 
 /* just fills in struct tcphdr with the provided data */
 void tcpHdr(char *, unsigned short, unsigned short, unsigned int, unsigned int, unsigned char, unsigned char, unsigned short, unsigned short, unsigned short);
-
-/* builds SYN packet for TCP SYN scan (Incomplete handshake scan) */
-void buildSYN(char *, packet_d *);
-
-/* decides what packet to create based on the provided */
-/* scan method */
-char *buildPacket(char *, packet_d *, int);
 
 int _state(char *, int);
 

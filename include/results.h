@@ -17,7 +17,7 @@ typedef struct scan_results{
 #define RESULTS_SIZ sizeof(results_d)
 #define RESULTS_TAG "results_struct\0"
 
-results_d *init_results();
+results_d *init_results(void);
 
 int add_open_port(results_d *, short);
 

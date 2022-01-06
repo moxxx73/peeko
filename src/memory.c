@@ -6,7 +6,6 @@ extern char underline[];
 extern char reset[];
 */
 
-/* for whenever we get a SIGINT or an error occurs */
 void clean_exit(pool_d *pool, int ret){
     pthread_cancel(pool->write_thread);
     pthread_cancel(pool->recv_thread);
@@ -36,7 +35,7 @@ void *create_pool(pool_d *pool){
 }
 
 /* allocates space for the new pointer being appended to the array */
-void *add_allocation(pool_d *p, void *ptr, short size, char *tag){
+void *add_allocation(pool_d *p, void *ptr, short size, const char *tag){
     pointer_l *x;
     x = p->ptrs;
     //if(debug) printf("\t\t%s[DEBUG]%s Adding %p to pool\n", underline, reset, ptr);
@@ -69,7 +68,7 @@ int get_ptr_index(pointer_l *p, void *ptr){
     return -1;
 }
 
-int get_tag_index(pointer_l *p, char *tag){
+int get_tag_index(pointer_l *p, const char *tag){
     pointer_l *x;
     int index;
     x = p;
@@ -94,7 +93,7 @@ pointer_l *ptr_via_index(pointer_l *p, void *ptr){
     return NULL;
 }
 
-pointer_l *ptr_via_tag(pointer_l *p, char *tag){
+pointer_l *ptr_via_tag(pointer_l *p, const char *tag){
     pointer_l *x;
     x = p;
     while(!x){
@@ -104,23 +103,6 @@ pointer_l *ptr_via_tag(pointer_l *p, char *tag){
         x = x->next;
     }
     return NULL;
-}
-
-void display_ptrs(pool_d *p){
-    pointer_l *x;
-    int index = 0;
-    x = p->ptrs;
-    while(x != NULL){
-        printf("\nIndex: %d @ %p\n", index, x);
-        printf("    Previous item: %p\n", x->prev);
-        printf("    Chunk pointer: %p\n", x->ptr);
-        printf("    Chunk tag: %s\n", x->tag);
-        printf("    Chunk size: %d\n", x->size);
-        printf("    Next item: %p\n", x->next);
-        index += 1;
-        x = x->next;
-    }
-    return;
 }
 
 int remove_allocation(pool_d *p, int index){
@@ -158,7 +140,7 @@ void free_ptr_list(pointer_l *ptr){
 }
 
 void display_stats(pool_d *p){
-    printf("\nMemory pool @ %p\n", p);
+    printf("\nMemory pool @ %p\n", (void *)p);
     printf("    Total No. of allocations: %d\n", p->allocations);
     printf("    Memory currently allocated: %d Bytes\n", p->allocated);
     printf("    Memory freed: %d Bytes\n", p->freed);
