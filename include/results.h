@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include "utils.h"
 
 typedef struct scan_results{
     int packets_recvd;

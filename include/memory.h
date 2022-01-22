@@ -16,7 +16,7 @@ typedef struct pointer_list{
     struct pointer_list *prev;
     void *ptr;
     short size;
-    char tag[PTR_TAG_SIZ]; // 25 bytes for string + null byte 
+    char tag[PTR_TAG_SIZ]; // 25 bytes for string + null byte
     struct pointer_list *next;
 } pointer_l;
 
@@ -24,7 +24,8 @@ typedef struct pointer_list{
 /* why use the term pool? cuz its makes stuff seem fancier */
 typedef struct data_pool{
     pthread_t recv_thread;
-    pthread_t write_thread;
+    int wthread_c;
+    pthread_t *write_threads;
     int recv_fd;   /* - so we can properly close the */
     int write_fd;  /*   descriptors when aborting the scan */
     int allocations; /* - The number of memory regions currently allocated */

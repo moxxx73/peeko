@@ -5,6 +5,9 @@ import os
 import subprocess
 import sys
 
+CAFEBABE_VER = '1.2'
+CAFEBABE_SIZ = "32.5 KB"
+
 home_path = os.environ['HOME']
 install_path:str = f'{home_path:s}/bin/'
 
@@ -110,7 +113,7 @@ def main(argc:int, argv:list) -> int:
 
     print('Cleaning up...')
     cleanup(obj_files)
-    print(f'Installed {install_path:s}cafebabe')
+    print(f'Installed Cafebabe {CAFEBABE_VER:s}')
     return 0
 
 

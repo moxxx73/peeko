@@ -15,17 +15,20 @@ int fill_stack(parse_r *lst, stack *st){
 
 /* the "staging area", just does a lot of the setup such as */
 /* creating the main data pool and our result structure in the heap */
-void cafebabe_main(cafebabe *args, char *name, parse_r *l, int t){
+void cafebabe_main(cafebabe *args, char *name, parse_r *l, int thread_no, char resolve){
     int r=0;
     int method;
     char src_str[INET_ADDRSTRLEN];
     scan_data *scan_info = NULL;
     stack *stck = NULL;
-    r = resolve_name(name, args->addr);
-    if(!r){
-        err_msg("resolve_name()");
-        exit(1);
-    }
+    if(resolve){
+        r = resolve_name(name, args->addr);
+        if(!r){
+            printf("%s[!]%s resolve_name(): %s\n", REDC, RESET, hstrerror(h_errno));
+            exit(1);
+        }
+    }else memcpy(name, args->addr, INET_ADDRSTRLEN);
+
     /* check whether we are doing a raw packet scan*/
     /* -in which case we'll need to know what interface */
     /* to work with */
@@ -34,9 +37,9 @@ void cafebabe_main(cafebabe *args, char *name, parse_r *l, int t){
             err_msg("getifaddr()");
             exit(1);
         }
-        printf("Operating on interface: %s (%s)\n", args->ifn, src_str);
+        printf("%s[*]%s Operating on interface: %s (%s)\n", BLUEC, RESET, args->ifn, src_str);
     }
-
+    printf("%s[-]%s Scanning Target %s\n", BLUEC, RESET, name);
     /* allocate the main allocation pool */
     if((pool = create_pool(pool)) == NULL){
         err_msg("create_pool()");
@@ -54,6 +57,7 @@ void cafebabe_main(cafebabe *args, char *name, parse_r *l, int t){
         printf("Failed to initialise scan data\n");
         clean_exit(pool, 1);
     }
+    scan_info->thread_c = thread_no;
     add_allocation(pool, (void *)scan_info, SCAN_DATA_SIZ, SCAN_DATA_TAG);
 
     stck = alloc_stack(l->llen);
@@ -74,7 +78,11 @@ void cafebabe_main(cafebabe *args, char *name, parse_r *l, int t){
     }
     add_allocation(pool, (void *)results, RESULTS_SIZ, RESULTS_TAG);
 
-    inet_pton(AF_INET, args->addr, &scan_info->dst_ip);
+    r = inet_pton(AF_INET, args->addr, &scan_info->dst_ip);
+    if(!r){
+        printf("%s[!]%s Invalid target address\n", REDC, RESET);
+        clean_exit(pool, 1);
+    }
     inet_pton(AF_INET, src_str, &scan_info->src_ip);
     scan_info->sport = args->sport;
     strncpy(scan_info->interface_name, args->ifn, IF_NAMESIZE);

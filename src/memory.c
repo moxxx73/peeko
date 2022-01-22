@@ -1,13 +1,13 @@
 #include "../include/memory.h"
 
-/*
-extern char debug;
-extern char underline[];
-extern char reset[];
-*/
-
 void clean_exit(pool_d *pool, int ret){
-    pthread_cancel(pool->write_thread);
+    int x=0;
+    if(pool->write_threads){
+        for(;x<pool->wthread_c;x++){
+            if(pool->write_threads[x]) pthread_cancel(pool->write_threads[x]);
+        }
+        free(pool->write_threads);
+    }
     pthread_cancel(pool->recv_thread);
     if(pool->recv_fd > 0) close(pool->recv_fd);
     if(pool->write_fd > 0) close(pool->write_fd);
@@ -24,11 +24,12 @@ void *create_pool(pool_d *pool){
         pool->write_fd = -1;
         pool->allocated = 0;
         pool->freed = 0;
+        pool->write_threads = NULL;
+        pool->wthread_c = 0;
         if((pool->ptrs = (pointer_l *)malloc(sizeof(pointer_l))) != NULL){
             pool->ptrs->prev = NULL;
             pool->ptrs->ptr = NULL;
             pool->ptrs->next = NULL;
-            //if(debug) printf("\t\t%s[DEBUG]%s Created heap pool @ %p\n", underline, reset, (void *)pool);
         }
     }
     return pool;
@@ -38,7 +39,6 @@ void *create_pool(pool_d *pool){
 void *add_allocation(pool_d *p, void *ptr, short size, const char *tag){
     pointer_l *x;
     x = p->ptrs;
-    //if(debug) printf("\t\t%s[DEBUG]%s Adding %p to pool\n", underline, reset, ptr);
     while(x->next != NULL){
         x = x->next;
     }
@@ -111,7 +111,6 @@ int remove_allocation(pool_d *p, int index){
     x = p->ptrs;
     while(x != NULL){
         if(index == i){
-            //if(debug) printf("\t\t%s[DEBUG]%s Removing %p from pool\n", underline, reset, (void *)x->ptr);
             y = x->prev;
             z = x->next;
             if(y!=NULL) y->next = z;

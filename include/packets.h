@@ -16,8 +16,6 @@
 #define TCP_SIZE sizeof(struct tcphdr)
 #define ETH_SIZE sizeof(struct ether_header)
 
-#define SYNSIZ (IP_SIZE+TCP_SIZE)
-
 #define ETHSIZ 14
 #define IPSIZ 20
 #define TCPSIZ 20

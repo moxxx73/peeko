@@ -46,9 +46,10 @@ int add_closed_port(results_d *results, short port){
 
 void display_results(results_d *results){
     int x=0;
+    printf("%s[+]%s Done scanning\n", GREENC, RESET);
     if(results->number_of_open){
         for(;x<results->number_of_open;x++){
-            printf("  Port %hu is open\n", results->open_ports[x]);
+            printf("    Port %hu is open\n", results->open_ports[x]);
         }
     }
     return;

@@ -23,6 +23,11 @@ typedef struct parse_ret{
 
 #define ERR_MSG_LEN 256
 
+#define REDC "\x1b[31m"
+#define GREENC "\x1b[32m"
+#define BLUEC "\x1B[34m"
+#define RESET "\x1b[0m"
+
 /* resolves the ip address of the provided name */
 int resolve_name(char *, char *);
 

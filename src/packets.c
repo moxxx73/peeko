@@ -54,22 +54,6 @@ void tcpHdr(char *b, unsigned short sport, unsigned short dport, unsigned int se
     tcph->th_urp = htons(urp);
     return;
 }
-/*
-void buildSYN(char *buffer, packet_d *ptr){
-    struct tcphdr *tcp;
-    struct tcpPseudo pseudo;
-    ipv4Hdr(buffer, SYNSIZ, ptr->id, 0, 64, IPPROTO_TCP, 0, ptr->src, ptr->dst);
-    tcpHdr((buffer+IP_SIZE), ptr->sport, ptr->dport, 0x115666, 0, 5, TH_SYN, 1024, 0, 0);
-    tcp = (struct tcphdr *)(buffer+IP_SIZE);
-    pseudo.src = ptr->src;
-    pseudo.dst = ptr->dst;
-    pseudo.length = htons(TCP_SIZE);
-    pseudo.null = 0x00;
-    pseudo.protocol = IPPROTO_TCP;
-    memcpy(&pseudo.tcp, tcp, TCP_SIZE);
-    tcp->th_sum = checksum((unsigned short *)&pseudo, sizeof(pseudo));
-    return;
-}*/
 
 int _state(char *packet, int method){
     /* filter only allows for ipv4+tcp packets */
