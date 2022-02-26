@@ -30,7 +30,6 @@ typedef struct raw_scan_data{
 } scan_data;
 
 #define SCAN_DATA_SIZ sizeof(scan_data)
-#define SCAN_DATA_TAG "raw_scan_data\0"
 
 char *construct_packet(scan_data *data, char peek_flag);
 

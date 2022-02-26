@@ -2,12 +2,9 @@
 
 #include "memory.h"
 
-extern pool_d *pool;
+extern mem_obj *mem;
 extern results_d *results;
 extern char verbose;
-
-pthread_mutex_t stack_lock = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t stdout_lock = PTHREAD_MUTEX_INITIALIZER;
 
 int scan_mgr(scan_data *data, int method){
     if(method == HANDSHAKE_SCAN) connect_scan(data);
@@ -48,108 +45,127 @@ int connect_scan(scan_data *data){
     return 1;
 }
 
-void *write_packets(void *arg){
-    scan_data *data = (scan_data *)arg;
-    struct sockaddr_in dst;
-    int sock;
-    char *packet;
+void read_write_cycle(int read_fd, int write_fd, scan_data *data, struct tpacket_req *treq){
+    fd_set write_set={0}, read_set={0};
+    struct timeval tv = {5, 0};
+    struct sockaddr_in dst={0};
+    struct tpacket2_hdr *tphdr;
+    char *packet_ptr=NULL;
+    char *buffer=NULL, *packet=NULL, *frame_ptr=NULL;
+    char *recv_buffer=NULL;
 
-    if(stack_empty(data->dports)) return NULL;
+    int expected = data->dports->frame_size;
+    int count=0;
+    int to_count = 0;
+    int r = 0;
 
-    sock = write_socket(AF_INET, IPPROTO_TCP);
-    if(sock < 0){
-        return NULL;
-    }
-
+    unsigned long frame_dx = 0;
+    unsigned long frame_dx_diff = 0;
+    unsigned long bf_dx = 0;
+    unsigned long fpb = 0;
+    
     dst.sin_family = AF_INET;
     dst.sin_addr.s_addr = data->dst_ip;
 
+    FD_ZERO(&write_set);
+    FD_ZERO(&read_set);
+
+    recv_buffer = (char *)malloc(8192);
+    if(!recv_buffer) return;
+    add_allocation(mem, (void *)recv_buffer, 8192);
+
+    if(stack_empty(data->dports)) return;
     while(!stack_empty(data->dports)){
-
-        pthread_mutex_lock(&stack_lock);
+        FD_SET(write_fd, &write_set);
         packet = construct_packet(data, 0);
-        pthread_mutex_unlock(&stack_lock);
-
-        sendto(sock, packet, 40, 0, (struct sockaddr *)&dst, sizeof(dst));
+        if(select((write_fd+1), NULL, &write_set, NULL, &tv) > 0){
+            sendto(write_fd, packet, 40, 0, (struct sockaddr *)&dst, sizeof(struct sockaddr_in));
+        }
+        free(packet);
     }
+    shutdown(write_fd, SHUT_RDWR);
+    close(write_fd);
+    write_fd = -1;
+    mem->write_fd = -1;
+    
+    frame_ptr = mem->rx_ring;
+    fpb = treq->tp_block_size/treq->tp_frame_size;
 
-    shutdown(sock, SHUT_RDWR);
-    close(sock);
-    return NULL;
-}
+    while(count<expected){
+        tphdr = (struct tpacket2_hdr *)frame_ptr;
+        while(!(tphdr->tp_status&TP_STATUS_USER)){
+            FD_SET(read_fd, &read_set);
+            r = select((read_fd+1), &read_set, NULL, NULL, &tv);
+            if(r < 0) return;
+            else if(r == 0){
+                if(to_count != 2) to_count += 1;
+                else return;
+            }
+            recvfrom(read_fd, recv_buffer, 8192, 0, NULL, NULL);
+        }
+        frame_dx = (frame_dx+1)%treq->tp_frame_nr;
+        bf_dx = frame_dx/fpb;
 
-int spawn_threads(scan_data *data){
-    int x=0;
-    int thread_count = data->thread_c;
-    pool->write_threads = (pthread_t *)malloc((sizeof(pthread_t)*thread_count));
-    if(!pool->write_threads){
-        err_msg("malloc()");
-        clean_exit(pool, 1);
+        buffer = (char *)(mem->rx_ring)+(bf_dx*treq->tp_block_size);
+        frame_dx_diff = frame_dx%fpb;
+
+        packet_ptr = (char *)frame_ptr+(tphdr->tp_mac);
+        parse_packet(packet_ptr, tphdr->tp_len, data->open_flags);
+        frame_ptr = (buffer)+(frame_dx_diff*treq->tp_frame_size);
+        tphdr->tp_status = TP_STATUS_KERNEL;
+        count += 1;
+        results->packets_recvd = count;
     }
-    pool->wthread_c = thread_count;
-    for(;x<pool->wthread_c;x++){
-        pthread_create(&pool->write_threads[x], NULL, write_packets, (void *)data);
-    }
-    return 0;
+    return;
 }
 
 int raw_scan(scan_data *data, int method){
-    int r, x=0;
-    int packet_count=0, expected_responses;
-    int sock;
+    int sock_write;
     filter_data filter_d;
-    char *recv_buffer;
-    char *template_packet; /* not really important but i thought itd be fun ^_^ */
-    /* also its not really a template per say, but whatevs */
+    rsock_obj *read_obj;
+    struct tpacket_req *tpk_ptr;
+
+    char *template_packet;
     switch(method){
-        /* its the only supported raw scan method for now */
-        /* but i do wanna implement more, with the way that */
-        /* this has been setup shouldnt be hard at all... */
         case SYN_SCAN:
             data->open_flags = (TH_SYN|TH_ACK);
             data->scan_flags = TH_SYN;
             break;
     }
-    expected_responses = data->dports->frame_size;
     filter_d.dst = data->dst_ip;
     filter_d.src = data->src_ip;
     filter_d.dport = data->sport;
-    /* nothing more than aesthetic */
+
     template_packet = construct_packet(data, 1);
     hex_dump((unsigned char *)template_packet, 40);
     free(template_packet);
 
-    recv_buffer = (char *)malloc(4096);
-    if(!recv_buffer){
-        err_msg("malloc()");
-        clean_exit(pool, 1);
+    read_obj = read_socket(data->interface_name, 5, data->family);
+    if(!read_obj){
+        err_msg("read_socket()");
+        clean_exit(mem, 1);
     }
+    mem->rx_ring = read_obj->rx_ring;
+    mem->rx_ring_size = read_obj->rx_ring_size;
+    mem->recv_fd = read_obj->sock_fd;
 
-    sock = read_socket(data->interface_name, 5, data->family);
-    if(sock < 0){
+    tpk_ptr = read_obj->tpack_r;
+    add_allocation(mem, (void *)tpk_ptr, sizeof(struct tpacket_req));
+    free(read_obj);
+
+    sock_write = write_socket(AF_INET, IPPROTO_TCP);
+    mem->write_fd = sock_write;
+
+    if((read_obj->sock_fd < 0) || (sock_write < 0)){
         err_msg("socket()");
-        clean_exit(pool, 1);
+        clean_exit(mem, 1);
     }
-    set_filter(sock, &filter_d);
-
-    spawn_threads(data);
-    for(;x<pool->wthread_c;x++){
-        pthread_join(pool->write_threads[x], NULL);
-        pool->write_threads[x] = 0;
-    }
-    while(packet_count<expected_responses){
-        r = recvfrom(sock, recv_buffer, 4096, 0, NULL, NULL);
-        if(r > 0){
-            //hex_dump((unsigned char *)recv_buffer, r);
-            parse_packet(recv_buffer, r, data->open_flags);
-            packet_count += 1;
-        }
-    }
-    shutdown(sock, SHUT_RDWR);
-    close(sock);
+    set_filter(read_obj->sock_fd, &filter_d);
+    read_write_cycle(read_obj->sock_fd, sock_write, data, tpk_ptr);
     return 0;
 }
 
 void signal_handler(int signal){
-    clean_exit(pool, 130);
+    printf("\n");
+    clean_exit(mem, 130);
 }

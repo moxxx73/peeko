@@ -9,7 +9,7 @@
 #define SPORT 666
 
 #define NAME "cafebabe"
-#define VERSION "1.2"
+#define VERSION "1.4"
 
 /* these are only used as i have only encounted these interface name */
 /* might need to implement a function that fetches an interface (getifaddrs)*/
@@ -124,8 +124,6 @@ int main(int argc, char *argv[]){
             }
         }
     }
-    //memset(target, 0, 255);
-    //memcpy(target, argv[argc-1], 255);
     if(!quiet){
       printf("(\\(\\\n");
       printf("(-.-)  %s Version: %s\n", NAME, VERSION);
@@ -135,7 +133,7 @@ int main(int argc, char *argv[]){
     /* check whether the user running the code has the necessary */
     /* privileges to use a raw scan method */
     if(!(method&HANDSHAKE_SCAN) && getuid() > 0){
-        printf("%s[!]%s The selected scan method requires you run this binary as root\n", REDC, RESET);
+        printf("[%sERROR%s] The selected scan method requires you run this binary as root\n", REDC, RESET);
         free(args->ifn);
         free(args->addr);
         free(args);

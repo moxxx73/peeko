@@ -5,8 +5,7 @@ import os
 import subprocess
 import sys
 
-CAFEBABE_VER = '1.2'
-CAFEBABE_SIZ = "32.5 KB"
+CAFEBABE_VER = '1.4'
 
 home_path = os.environ['HOME']
 install_path:str = f'{home_path:s}/bin/'
@@ -14,7 +13,7 @@ install_path:str = f'{home_path:s}/bin/'
 gcc_flags:list = [
     "-Wall", "-Wextra", "-Wpedantic", "-Wformat=2", "-Wno-unused-parameter", "-Wshadow",
     "-Wwrite-strings", "-Wstrict-prototypes", "-Wold-style-definition", "-Wredundant-decls",
-    "-Wnested-externs", "-Wmissing-include-dirs", "-lpthread"
+    "-Wnested-externs", "-Wmissing-include-dirs"
 ]
 
 src_path = './src/'

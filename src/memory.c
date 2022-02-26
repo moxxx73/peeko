@@ -1,53 +1,46 @@
 #include "../include/memory.h"
 
-void clean_exit(pool_d *pool, int ret){
-    int x=0;
-    if(pool->write_threads){
-        for(;x<pool->wthread_c;x++){
-            if(pool->write_threads[x]) pthread_cancel(pool->write_threads[x]);
-        }
-        free(pool->write_threads);
-    }
-    pthread_cancel(pool->recv_thread);
-    if(pool->recv_fd > 0) close(pool->recv_fd);
-    if(pool->write_fd > 0) close(pool->write_fd);
-    free_ptr_list(pool->ptrs);
-    free(pool);
+extern results_d *results;
+
+void clean_exit(mem_obj *mem, int ret){
+    if(mem->rx_ring) munmap(mem->rx_ring, mem->rx_ring_size);
+    if(mem->recv_fd > 0) close(mem->recv_fd);
+    if(mem->write_fd > 0) close(mem->write_fd);
+    if(ret == 130) display_results(results);
+    free_ptr_list(mem->ptrs);
+    free(mem);
     exit(ret);
 }
 
-void *create_pool(pool_d *pool){
-    pool = (pool_d *)malloc(sizeof(pool_d));
-    if(pool != NULL){
-        pool->allocations = 0;
-        pool->recv_fd = -1;
-        pool->write_fd = -1;
-        pool->allocated = 0;
-        pool->freed = 0;
-        pool->write_threads = NULL;
-        pool->wthread_c = 0;
-        if((pool->ptrs = (pointer_l *)malloc(sizeof(pointer_l))) != NULL){
-            pool->ptrs->prev = NULL;
-            pool->ptrs->ptr = NULL;
-            pool->ptrs->next = NULL;
+mem_obj *alloc_mem_obj(mem_obj *mem){
+    mem = (mem_obj *)malloc(sizeof(mem_obj));
+    if(mem != NULL){
+        mem->allocations = 0;
+        mem->recv_fd = -1;
+        mem->write_fd = -1;
+        mem->allocated = 0;
+        mem->freed = 0;
+        if((mem->ptrs = (ptr_list *)malloc(sizeof(ptr_list))) != NULL){
+            mem->ptrs->prev = NULL;
+            mem->ptrs->ptr = NULL;
+            mem->ptrs->next = NULL;
         }
     }
-    return pool;
+    return mem;
 }
 
 /* allocates space for the new pointer being appended to the array */
-void *add_allocation(pool_d *p, void *ptr, short size, const char *tag){
-    pointer_l *x;
+void *add_allocation(mem_obj *p, void *ptr, short size){
+    ptr_list *x;
     x = p->ptrs;
     while(x->next != NULL){
         x = x->next;
     }
-    x->next = (pointer_l *)malloc(sizeof(pointer_l));
+    x->next = (ptr_list *)malloc(sizeof(ptr_list));
     if(x->next != NULL){
         x->next->prev = x;
         x->next->ptr = ptr;
         x->next->size = size;
-        memcpy(x->next->tag, tag, PTR_TAG_SIZ);
         x->next->next = NULL;
         p->allocated += size;
         p->allocations += 1;
@@ -56,8 +49,8 @@ void *add_allocation(pool_d *p, void *ptr, short size, const char *tag){
     return NULL;
 }
 
-int get_ptr_index(pointer_l *p, void *ptr){
-    pointer_l *x;
+int get_ptr_index(ptr_list *p, void *ptr){
+    ptr_list *x;
     int ret = 0;
     x = p;
     while(x != NULL){
@@ -68,23 +61,8 @@ int get_ptr_index(pointer_l *p, void *ptr){
     return -1;
 }
 
-int get_tag_index(pointer_l *p, const char *tag){
-    pointer_l *x;
-    int index;
-    x = p;
-    index = 0;
-    while(!x){
-        if(strncmp(x->tag, tag, PTR_TAG_SIZ) == 0){
-            return index;
-        }
-        index += 1;
-        x = x->next;
-    }
-    return -1;
-}
-
-pointer_l *ptr_via_index(pointer_l *p, void *ptr){
-    pointer_l *x;
+ptr_list *ptr_via_index(ptr_list *p, void *ptr){
+    ptr_list *x;
     x = p;
     while(!x){
         if(x->ptr == ptr) return x;
@@ -93,20 +71,8 @@ pointer_l *ptr_via_index(pointer_l *p, void *ptr){
     return NULL;
 }
 
-pointer_l *ptr_via_tag(pointer_l *p, const char *tag){
-    pointer_l *x;
-    x = p;
-    while(!x){
-        if(strncmp(x->tag, tag, PTR_TAG_SIZ) == 0){
-            return x;
-        }
-        x = x->next;
-    }
-    return NULL;
-}
-
-int remove_allocation(pool_d *p, int index){
-    pointer_l *x, *y=NULL, *z=NULL;
+int remove_allocation(mem_obj *p, int index){
+    ptr_list *x, *y=NULL, *z=NULL;
     int i = 0;
     x = p->ptrs;
     while(x != NULL){
@@ -118,6 +84,8 @@ int remove_allocation(pool_d *p, int index){
             p->allocated -= x->size;
             p->allocations -= 1;
             p->freed += x->size;
+            if(x->ptr) free(x->ptr);
+            x->ptr = NULL;
             free(x);
             return 0;
         }
@@ -127,19 +95,21 @@ int remove_allocation(pool_d *p, int index){
     return -1;
 }
 
-void free_ptr_list(pointer_l *ptr){
-    pointer_l *x, *y;
+void free_ptr_list(ptr_list *ptr){
+    ptr_list *x, *y;
     x = ptr;
     while(x != NULL){
         y = x;
         x = x->next;
+        if(y->ptr) free(y->ptr);
+        y->ptr = NULL;
         free(y);
     }
     return;
 }
 
-void display_stats(pool_d *p){
-    printf("\nMemory pool @ %p\n", (void *)p);
+void display_stats(mem_obj *p){
+    printf("\nMemory mem @ %p\n", (void *)p);
     printf("    Total No. of allocations: %d\n", p->allocations);
     printf("    Memory currently allocated: %d Bytes\n", p->allocated);
     printf("    Memory freed: %d Bytes\n", p->freed);

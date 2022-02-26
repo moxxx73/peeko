@@ -34,6 +34,9 @@ int parse_packet(char *packet, int packet_length, short positive_flag){
     if(packet_length < minsiz) return -1;
     tcp = (struct tcphdr *)(packet+(ETH_SIZE+IP_SIZE));
     //printf("%hu = %hu\n", positive_flag, ntohs(tcp->th_flags));
-    if(positive_flag == tcp->th_flags) add_open_port(results, ntohs(tcp->th_sport));
+    if(positive_flag == tcp->th_flags){
+        //printf("[%s%s%s] Port %hu is open\n", GREENC, results->ip_string, RESET, ntohs(tcp->th_sport));
+        add_open_port(results, ntohs(tcp->th_sport));
+    }
     return 0;
 }

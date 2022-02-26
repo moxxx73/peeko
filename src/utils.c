@@ -153,7 +153,7 @@ parse_r *parse_port_args(char *argv){
 
 void err_msg(const char *msg){
     char err_buf[ERR_MSG_LEN];
-    snprintf(err_buf, ERR_MSG_LEN, "%s[!]%s %s: %s\n", REDC, RESET, msg, strerror(errno));
+    snprintf(err_buf, ERR_MSG_LEN, "[%sERROR%s] %s: %s\n", REDC, RESET, msg, strerror(errno));
     printf("%s", err_buf);
     return;
 }
@@ -162,6 +162,7 @@ void hex_dump(unsigned char *data, int length){
     int c=0, x=0, y=0, z=0;
     unsigned char ch;
     while(c < length){
+        printf("\t0x%04x: ", c);
         for(;x<6;x++){
             if((c+x) >= length) break;
             printf("%02x ", data[c+x]);

@@ -20,9 +20,6 @@ typedef struct filter_data_struct{
     short sport;
 } filter_data;
 
-#define FILTER_SIZ sizeof(filter_data)
-#define FILTER_TAG "filter_data\0"
-
 int set_filter(int, filter_data *);
 
 #endif

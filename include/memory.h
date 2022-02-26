@@ -1,62 +1,56 @@
 #ifndef MEM_H
 #define MEM_H
 
-#include <pthread.h> /* pthread_t */
 #include <stdlib.h> /* free(), malloc() */
 #include <unistd.h> /* close() */
 #include <string.h> /* strncmp() */
 #include <stdio.h>
+#include <sys/mman.h>
 #include <net/if.h>
 
 #include "stack.h"
+#include "results.h"
 
-#define PTR_TAG_SIZ 26
-
-typedef struct pointer_list{
-    struct pointer_list *prev;
+typedef struct ptr_listist{
+    struct ptr_listist *prev;
     void *ptr;
     short size;
-    char tag[PTR_TAG_SIZ]; // 25 bytes for string + null byte
-    struct pointer_list *next;
-} pointer_l;
+    struct ptr_listist *next;
+} ptr_list;
 
 /* data pool that can be accessed by all functions */
 /* why use the term pool? cuz its makes stuff seem fancier */
-typedef struct data_pool{
-    pthread_t recv_thread;
-    int wthread_c;
-    pthread_t *write_threads;
+typedef struct mem_data{
+    int rx_ring_size;
+    void *rx_ring;
     int recv_fd;   /* - so we can properly close the */
     int write_fd;  /*   descriptors when aborting the scan */
     int allocations; /* - The number of memory regions currently allocated */
     int allocated; /* amount of memory in bytes that is in use */
     int freed; /* the amount of memory in bytes that is no longer in use */
-    pointer_l *ptrs; /* - any memory allocations we have made that have */
-} pool_d;            /*   not been freed. excluding the pool itself */
+    ptr_list *ptrs; /* - any memory allocations we have made that have */
+} mem_obj;            /*   not been freed. excluding the pool itself */
 
 /* incase any fatal errors occur we can exit */
 /* safely (close descriptors and free allocated memory) */
-void clean_exit(pool_d *, int);
+void clean_exit(mem_obj *, int);
 
 /* just allocates the structure */
-void *create_pool(pool_d *);
+mem_obj *alloc_mem_obj(mem_obj *);
 
 /* appends the pointer to a new memory allocation */
 /* to the memory pools pointer list and updates */
 /* memory data (e.g. amount allocated) */
-void *add_allocation(pool_d *, void *, short, const char *);
+void *add_allocation(mem_obj *, void *, short);
 
-int get_ptr_index(pointer_l *, void *);
+int get_ptr_index(ptr_list *, void *);
 
-int get_tag_index(pointer_l *, const char *);
+ptr_list *ptr_via_index(ptr_list *, void *);
 
-pointer_l *ptr_via_index(pointer_l *, void *);
+int remove_allocation(mem_obj *, int);
 
-pointer_l *ptr_via_tag(pointer_l *, const char *);
+void free_ptr_list(ptr_list *);
 
-int remove_allocation(pool_d *, int);
-
-void free_ptr_list(pointer_l *);
-
-void display_stats(pool_d *);
+void display_stats(mem_obj *);
 #endif
+

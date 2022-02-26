@@ -6,7 +6,7 @@
 #include <stdlib.h> /* malloc(), free() */
 #include <unistd.h> /* close(), write() */
 #include <string.h> /* strerror() */
-#include <pthread.h>
+#include <sys/select.h>
 
 #include "net.h"
 #include "memory.h"
@@ -16,13 +16,13 @@
 #define HANDSHAKE_SCAN 0x01
 #define SYN_SCAN 0x02
 
-int scan_mgr(scan_data *, int);
+int scan_mgr(scan_data *data, int method);
 
-int connect_scan(scan_data *);
+int connect_scan(scan_data *data);
 
-int spawn_threads(scan_data *);
+void read_write_cycle(int read_fd, int write_fd, scan_data *data, struct tpacket_req *treq);
 
-int raw_scan(scan_data *, int);
+int raw_scan(scan_data *data, int method);
 
 void signal_handler(int);
 

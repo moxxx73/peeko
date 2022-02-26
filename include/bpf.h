@@ -61,3 +61,4 @@ int getLength(struct bpfData *);
 int readDev(int, struct bpfData *, int);
 
 #endif
+
