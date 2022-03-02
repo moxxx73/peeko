@@ -10,7 +10,7 @@
 
 #define NAME "cafebabe"
 #define VERSION "1.42"
-#define COMMON_PATH "/opt/cafebabe/common-cafebabe"
+#define COMMON_PATH "$CHANGE/cafebabe/common-cafebabe"
 #define IFN_NAME "wlan0\0"
 
 char verbose=0;

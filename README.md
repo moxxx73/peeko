@@ -11,4 +11,10 @@ The last change greatly improves performance, however theres still some kinks th
 Ver. 1.5 will be the next big update so this is just kind of like a "prelease" of sorts as the next update  
 should make the project more well rounded and include more features, hopefully.
 
+Install
+-------
+before compiling, edit `COMMON_PATH` to the path where you cloned the repo
+compile.py (formerly install.py) no longer moves the compiled binary so its
+up to you where it goes.
+
 *_Tested on Kali Linux & Android_*
