@@ -151,6 +151,67 @@ parse_r *parse_port_args(char *argv){
     return ret;
 }
 
+parse_r *parse_file(const char *fn){
+    FILE *fd=NULL;
+    struct stat st={0};
+    
+    char *r_buf=NULL;
+    char tmp[64];
+    short *sh_tmp=NULL, port;
+
+    int file_size=0;
+    parse_r *ret;
+
+    ret = (parse_r *)malloc(sizeof(parse_r));
+    if(!ret){
+        err_msg("malloc()");
+        return NULL;
+    }
+    if(stat(fn, &st) < 0){
+        err_msg("stat()");
+        return NULL;
+    }
+    file_size = st.st_size;
+    r_buf = (char *)malloc((file_size+1));
+    if(!r_buf){
+        err_msg("malloc()");
+        return NULL;
+    }
+    memset(r_buf, 0, (file_size+1));
+
+    fd = fopen(fn, "r");
+    if(!fd){
+        err_msg("fopen()");
+        goto parse_file_err;
+    }
+    ret->list = NULL;
+    ret->llen = 0;
+
+    while(fgets(r_buf, file_size, fd)){
+        if(strlen(r_buf) < 64){
+            memcpy(tmp, r_buf, (strlen(r_buf)-1));
+            port = (short)atoi(tmp);
+            if(port){
+                ret->llen += 1;
+                sh_tmp = realloc(ret->list, ret->llen*sizeof(short));
+                if(!sh_tmp) goto parse_file_err;
+                sh_tmp[(ret->llen-1)] = port;
+                ret->list = sh_tmp;
+            }
+        }
+        memset(r_buf, 0, file_size);
+        memset(tmp, 0, 64);
+    }
+    free(r_buf);
+    fclose(fd);
+    return ret;
+parse_file_err:
+    if(ret) free(ret);
+    if(r_buf) free(r_buf);
+    if(fd) fclose(fd);
+    return NULL;
+}
+
 void err_msg(const char *msg){
     char err_buf[ERR_MSG_LEN];
     snprintf(err_buf, ERR_MSG_LEN, "[%sERROR%s] %s: %s\n", REDC, RESET, msg, strerror(errno));

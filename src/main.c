@@ -9,15 +9,9 @@
 #define SPORT 666
 
 #define NAME "cafebabe"
-#define VERSION "1.4"
-
-/* these are only used as i have only encounted these interface name */
-/* might need to implement a function that fetches an interface (getifaddrs)*/
-#if __APPLE__
-    #define IFN_NAME "en0\0"
-#else
-    #define IFN_NAME "wlan0\0"
-#endif
+#define VERSION "1.42"
+#define COMMON_PATH "/opt/cafebabe/common-cafebabe"
+#define IFN_NAME "wlan0\0"
 
 char verbose=0;
 
@@ -47,20 +41,16 @@ int main(int argc, char *argv[]){
     char resolve_target=1;
     int threads=MAX_THREADS;
     char quiet=0;
-    /* default scan method is unprivileged */
     char *arg, method=HANDSHAKE_SCAN;
     int i=1;
-    //unsigned int addr_check;
-    cafebabe *args;
-    parse_r *list;
+    cafebabe *args=NULL;
+    parse_r *list=NULL;
     if(argc < 2){
         usage(argv[0]);
         help();
         return 0;
     }
     memcpy(ifn, IFN_NAME, 16);
-    /* basic structure to keep the amount of function args */
-    /* passed down */
     args = (cafebabe *)malloc(sizeof(cafebabe));
     if(args == NULL){
         printf("[!] failed to allocate memory for cafebabe structure\n");
@@ -69,13 +59,12 @@ int main(int argc, char *argv[]){
     args->ifn = (char *)malloc(IF_NAMESIZE);
     args->addr = (char *)malloc(INET_ADDRSTRLEN);
     args->timeout = 5;
-    /* Parse command line args */
     for(;i<(argc);i++){
         if(argv[i][0] == '-'){
             switch(argv[i][1]){
                 case 'p':
                     if((i+1) >= argc) return 1;
-                    if((list = parse_port_args(argv[i+1])) == NULL) return -1;
+                    if((list = parse_port_args(argv[i+1])) == NULL) return 1;
                     break;
                 case 'T':
                     if((i+1) >= argc) return 1;
@@ -93,7 +82,6 @@ int main(int argc, char *argv[]){
                   quiet = 1;
                   break;
                 case 'n':
-                    /* DONT resolve hostname */
                     resolve_target = 0;
                     break;
                 case 's':
@@ -123,6 +111,10 @@ int main(int argc, char *argv[]){
                     break;
             }
         }
+    }
+    if(!list){
+        list = parse_file(COMMON_PATH);
+        if(!list) return 1;
     }
     if(!quiet){
       printf("(\\(\\\n");

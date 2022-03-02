@@ -20,9 +20,9 @@ int scan_mgr(scan_data *data, int method);
 
 int connect_scan(scan_data *data);
 
-void read_write_cycle(int read_fd, int write_fd, scan_data *data, struct tpacket_req *treq);
+void read_write_cycle(int read_fd, int write_fd, scan_data *data, struct tpacket_req *treq, int tun);
 
-int raw_scan(scan_data *data, int method);
+int raw_scan(scan_data *data, int method, int tun);
 
 void signal_handler(int);
 

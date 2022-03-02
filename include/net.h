@@ -33,5 +33,5 @@ typedef struct raw_scan_data{
 
 char *construct_packet(scan_data *data, char peek_flag);
 
-int parse_packet(char *packet, int packet_length, short positive_flag);
+int parse_packet(char *packet, int packet_length, short positive_flag, int tun);
 #endif

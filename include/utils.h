@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <errno.h>
+#include <sys/stat.h>
 #include <netdb.h> /* gethostbyname() */
 #include <unistd.h> /* close() */
 #include <sys/socket.h> /* AF_INET, ... */
@@ -43,6 +44,8 @@ short *parse_list(char *, int, int);
 parse_r *parse_range(char *, int);
 
 parse_r *parse_port_args(char *);
+
+parse_r *parse_file(const char *fn);
 
 void err_msg(const char *);
 

@@ -5,7 +5,7 @@ import os
 import subprocess
 import sys
 
-CAFEBABE_VER = '1.4'
+CAFEBABE_VER = '1.42'
 
 home_path = os.environ['HOME']
 install_path:str = f'{home_path:s}/bin/'

@@ -28,11 +28,16 @@ char *construct_packet(scan_data *data, char peek_flag){
     return packet_buf;
 }
 
-int parse_packet(char *packet, int packet_length, short positive_flag){
+int parse_packet(char *packet, int packet_length, short positive_flag, int tun){
     struct tcphdr *tcp;
-    int minsiz = (ETH_SIZE+IP_SIZE+TCP_SIZE);
+    int minsiz = (IP_SIZE+TCP_SIZE);
+    int offset = IP_SIZE;
+    if(!tun){
+        minsiz += ETH_SIZE;
+        offset += ETH_SIZE;
+    }
     if(packet_length < minsiz) return -1;
-    tcp = (struct tcphdr *)(packet+(ETH_SIZE+IP_SIZE));
+    tcp = (struct tcphdr *)(packet+(offset));
     //printf("%hu = %hu\n", positive_flag, ntohs(tcp->th_flags));
     if(positive_flag == tcp->th_flags){
         //printf("[%s%s%s] Port %hu is open\n", GREENC, results->ip_string, RESET, ntohs(tcp->th_sport));

@@ -7,8 +7,35 @@ extern results_d *results;
 extern char verbose;
 
 int scan_mgr(scan_data *data, int method){
+    struct ifreq ifr;
+    int tun_flag=1;
+    int dummy_sock=0;
+    int addr_index=0;
     if(method == HANDSHAKE_SCAN) connect_scan(data);
-    else raw_scan(data, method);
+    else{
+        memcpy(ifr.ifr_name, data->interface_name, IFNAMSIZ);
+        dummy_sock = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
+        if(dummy_sock < 0){
+            err_msg("socket()");
+            clean_exit(mem, 1);
+        }
+        if(ioctl(dummy_sock, SIOCGIFHWADDR, &ifr) < 0){
+            err_msg("ioctl()");
+            shutdown(dummy_sock, SHUT_RDWR);
+            close(dummy_sock);
+            clean_exit(mem, 1);
+        }
+        for(;addr_index<6;addr_index++){
+            if(ifr.ifr_addr.sa_data[addr_index] != 0x00){
+                tun_flag = 0;
+                break;
+            }
+        }
+        shutdown(dummy_sock, SHUT_RDWR);
+        close(dummy_sock);
+        raw_scan(data, method, tun_flag);
+
+    }
     return 0;
 }
 
@@ -45,7 +72,7 @@ int connect_scan(scan_data *data){
     return 1;
 }
 
-void read_write_cycle(int read_fd, int write_fd, scan_data *data, struct tpacket_req *treq){
+void read_write_cycle(int read_fd, int write_fd, scan_data *data, struct tpacket_req *treq, int tun){
     fd_set write_set={0}, read_set={0};
     struct timeval tv = {5, 0};
     struct sockaddr_in dst={0};
@@ -98,10 +125,11 @@ void read_write_cycle(int read_fd, int write_fd, scan_data *data, struct tpacket
             r = select((read_fd+1), &read_set, NULL, NULL, &tv);
             if(r < 0) return;
             else if(r == 0){
-                if(to_count != 2) to_count += 1;
-                else return;
+                if(to_count == 5) return;
+                else to_count += 1;
             }
-            recvfrom(read_fd, recv_buffer, 8192, 0, NULL, NULL);
+            r = recvfrom(read_fd, recv_buffer, 8192, 0, NULL, NULL);
+            if(r > 0) parse_packet(recv_buffer, 8192, data->open_flags, tun);
         }
         frame_dx = (frame_dx+1)%treq->tp_frame_nr;
         bf_dx = frame_dx/fpb;
@@ -110,7 +138,7 @@ void read_write_cycle(int read_fd, int write_fd, scan_data *data, struct tpacket
         frame_dx_diff = frame_dx%fpb;
 
         packet_ptr = (char *)frame_ptr+(tphdr->tp_mac);
-        parse_packet(packet_ptr, tphdr->tp_len, data->open_flags);
+        parse_packet(packet_ptr, tphdr->tp_len, data->open_flags, tun);
         frame_ptr = (buffer)+(frame_dx_diff*treq->tp_frame_size);
         tphdr->tp_status = TP_STATUS_KERNEL;
         count += 1;
@@ -119,8 +147,8 @@ void read_write_cycle(int read_fd, int write_fd, scan_data *data, struct tpacket
     return;
 }
 
-int raw_scan(scan_data *data, int method){
-    int sock_write;
+int raw_scan(scan_data *data, int method, int tun){
+    int sock_write, r;
     filter_data filter_d;
     rsock_obj *read_obj;
     struct tpacket_req *tpk_ptr;
@@ -160,8 +188,9 @@ int raw_scan(scan_data *data, int method){
         err_msg("socket()");
         clean_exit(mem, 1);
     }
-    set_filter(read_obj->sock_fd, &filter_d);
-    read_write_cycle(read_obj->sock_fd, sock_write, data, tpk_ptr);
+    r = set_filter(read_obj->sock_fd, &filter_d, tun);
+    if(r < 0) clean_exit(mem, 1);
+    read_write_cycle(read_obj->sock_fd, sock_write, data, tpk_ptr, tun);
     return 0;
 }
 

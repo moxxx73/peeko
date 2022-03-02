@@ -5,6 +5,7 @@ rsock_obj *read_socket(char *ifn, int timeout, int family){
     int fd=-1, sf=0;
     struct ifreq ifr = {0};
     struct timeval tm = {0};
+    struct sockaddr_ll sa={0};
     int ver = TPACKET_V2;
     unsigned long fpb = 0;
 
@@ -16,7 +17,12 @@ rsock_obj *read_socket(char *ifn, int timeout, int family){
     memcpy(&ifr, ifn, IFNAMSIZ);
     fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
     if(fd < 0) return NULL;
-    if(setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, &ifr, sizeof(ifr)) < 0) goto rs_err_exit;
+    //if(setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, &ifr, sizeof(ifr)) < 0) goto rs_err_exit;
+    sa.sll_family = AF_PACKET;
+    sa.sll_pkttype = PACKET_HOST;
+    sa.sll_protocol = htons(ETH_P_ALL);
+    sa.sll_ifindex = if_nametoindex(ifn);
+    if(bind(fd, (struct sockaddr *)&sa, sizeof(sa)) < 0) goto rs_err_exit;
 
     tm.tv_usec = 0;
     tm.tv_sec = timeout;
