@@ -9,7 +9,7 @@
 #define SPORT 666
 
 #define NAME "cafebabe"
-#define VERSION "1.42"
+#define VERSION "1.43"
 #define COMMON_PATH "$CHANGE/cafebabe/common-cafebabe"
 #define IFN_NAME "wlan0\0"
 
