@@ -2,10 +2,10 @@
 #define LINUX_NET_HDR
 
 #include <unistd.h>
-#include <net/if.h> /* struct ifreq, ... */
+#include <net/if.h> 
 #include <sys/time.h>
-#include <sys/socket.h> /* AF_INET, socket() */
-#include <netinet/in.h> /* IPPROTO_IP, ... */
+#include <sys/socket.h>
+#include <netinet/in.h>
 #include <sys/fcntl.h>
 #include <linux/if_packet.h>
 #include <sys/mman.h>

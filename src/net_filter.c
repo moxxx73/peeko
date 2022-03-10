@@ -1,5 +1,11 @@
 #include "../include/net_filter.h"
 
+/* the linux socket filter is derived from FreeBSDs berkeley packet filter, BPF.        */
+/* making use of these filters is quite similar in my experience (that being utilising  */
+/* socket filters on linux and MacOS) but there are obviously some differences.         */
+
+/* i wont go on much further, details will be in future documentation im writing */
+
 int set_filter(int fd, filter_data *ptr, int tun){
     struct sock_fprog program={0};
     struct sock_filter *filter=((void *)0);
@@ -16,6 +22,8 @@ int set_filter(int fd, filter_data *ptr, int tun){
         err_msg("malloc()");
         return -1;
     }
+    /* if we're dealing with a layer 3 tunnel interface (indicated by int tun) then there will be */
+    /* no ethernet address at the start of the received packet                                    */
     if(!tun){
         filter[0] = (struct sock_filter)BPF_STMT(BPF_LD+BPF_H+BPF_ABS, 12);
         filter[1] = (struct sock_filter)BPF_JUMP(BPF_JMP+BPF_JEQ+BPF_K, 0x0800, 0, 9);
