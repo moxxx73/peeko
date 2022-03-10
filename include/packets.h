@@ -1,13 +1,13 @@
 #ifndef NET_H
 #define NET_H
 
-#include <netinet/tcp.h> /* struct tcphdr */
-#include <netinet/ip.h> /* struct ip */
-#include <net/ethernet.h> /* struct ether_header, ETHERTYPE_IP */
-#include <sys/socket.h> /* socket(), AF_INET, ...*/
-#include <netinet/in.h> /* IPPROTO_IP, ... */
-#include <arpa/inet.h> /* htons(), ... */
-#include <stdlib.h> /* malloc(), free() */
+#include <netinet/tcp.h> 
+#include <netinet/ip.h>
+#include <net/ethernet.h>
+#include <sys/socket.h> 
+#include <netinet/in.h> 
+#include <arpa/inet.h> 
+#include <stdlib.h>
 #include <string.h>
 
 #include "results.h"
@@ -16,34 +16,30 @@
 #define TCP_SIZE sizeof(struct tcphdr)
 #define ETH_SIZE sizeof(struct ether_header)
 
-#define ETHSIZ 14
-#define IPSIZ 20
-#define TCPSIZ 20
+#define ETHSIZ ETH_SIZE
+#define IPSIZ IP_SIZE
+#define TCPSIZ TCP_SIZE
 
 #define SYN_METH 1
 
-/* the tcp/udp checksum uses a pseudo header as well the */
-/* tcp header to calculate the tcp/udp checksum */
+/* the tcp checksum uses a pseudo header as well the     */
+/* tcp header to calculate the tcp/udp checksum          */
 struct tcpPseudo{
-	unsigned int src;
-	unsigned int dst;
-	unsigned short length;
-	unsigned char null;
-	unsigned char protocol;
-	struct tcphdr tcp;
+	unsigned int src; /* Source IPv4 address */
+	unsigned int dst; /* Destination IPv4 address */
+	unsigned short length; /* length of the TCP header */
+	unsigned char null; /* NULL byte */
+	unsigned char protocol; /* set to IPPROTO_TCP */
+	struct tcphdr tcp; /* TCP header */
 };
 
-short get_sport(char *);
-
-/*TCP checksum algorithm*/
+/* TCP checksum algorithm*/
 unsigned short checksum(unsigned short *, int);
 
-/* just fills in struct ip with the provided data */
+/* assigns IPv4 header fields */
 void ipv4Hdr(char *, unsigned short, unsigned short, unsigned short, unsigned char, unsigned char, unsigned short, unsigned int, unsigned int);
 
-/* just fills in struct tcphdr with the provided data */
+/* assigns TCP header fields */
 void tcpHdr(char *, unsigned short, unsigned short, unsigned int, unsigned int, unsigned char, unsigned char, unsigned short, unsigned short, unsigned short);
-
-int _state(char *, int);
 
 #endif

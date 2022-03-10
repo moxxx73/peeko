@@ -6,25 +6,39 @@ extern mem_obj *mem;
 extern results_d *results;
 extern char verbose;
 
+/* executes either raw_scan or connect scan */
+/* based on the method provided             */
 int scan_mgr(scan_data *data, int method){
     struct ifreq ifr;
     int tun_flag=1;
     int dummy_sock=0;
     int addr_index=0;
+    /* connect_scan() is the default, unprivileged scan */
+    /* so not much setup is needed                      */
     if(method == HANDSHAKE_SCAN) connect_scan(data);
+    /* none of what we do for the raw scan is necessary for       */
+    /* the connect as we are using the connect() syscall, as such */
+    /* the kernel will handle this operations instead             */
     else{
+        /* to fetch interface data we need to provide a socket */
+        /* so this throw away on will do                       */
         memcpy(ifr.ifr_name, data->interface_name, IFNAMSIZ);
         dummy_sock = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
         if(dummy_sock < 0){
             err_msg("socket()");
             clean_exit(mem, 1);
         }
+        /* fetches the MAC address of the interface is specified in */
+        /* struct ifreq ifr                                         */
         if(ioctl(dummy_sock, SIOCGIFHWADDR, &ifr) < 0){
             err_msg("ioctl()");
             shutdown(dummy_sock, SHUT_RDWR);
             close(dummy_sock);
             clean_exit(mem, 1);
         }
+        /* determine whether the tunnel interface has a MAC                            */
+        /* address, this is for determining which layer the tunnel supports            */
+        /* which will be important when applying a filter and parsing received packets */
         for(;addr_index<6;addr_index++){
             if(ifr.ifr_addr.sa_data[addr_index] != 0x00){
                 tun_flag = 0;
@@ -39,6 +53,7 @@ int scan_mgr(scan_data *data, int method){
     return 0;
 }
 
+/* very simple scan uitilising the connect() syscall */
 int connect_scan(scan_data *data){
     struct sockaddr_in dst;
     stack *st_ptr;
@@ -148,31 +163,51 @@ void read_write_cycle(int read_fd, int write_fd, scan_data *data, struct tpacket
 }
 
 int raw_scan(scan_data *data, int method, int tun){
-    int sock_write, r;
-    filter_data filter_d;
-    rsock_obj *read_obj;
-    struct tpacket_req *tpk_ptr;
+    int sock_write=0, r=0;
+    filter_data filter_d={0};
+    rsock_obj *read_obj=NULL;
+    struct tpacket_req *tpk_ptr=NULL;
+    char *template_packet=NULL;
 
-    char *template_packet;
+    /* determining positive case TCP flags               */
+    /* based on the selected method, this allows         */
+    /* for alternate methods to be easily added          */
+    /* as after this point we aren't actually concerned  */
+    /* with what method/flags are set only if they match */
+    /* with the flags we're looking for                  */
     switch(method){
         case SYN_SCAN:
             data->open_flags = (TH_SYN|TH_ACK);
             data->scan_flags = TH_SYN;
             break;
     }
+
+    /* narrows down the reception               */
+    /* to only the dst_ip & src_ip:src_port     */
+    /* filter operations defined in:            */
+    /*    + cafebabe/include/net_filter.h       */
+    /*    + cafebabe/src/net_filter.c           */
     filter_d.dst = data->dst_ip;
     filter_d.src = data->src_ip;
     filter_d.dport = data->sport;
 
+    /* doesn't serve any real purpose other than looking nice */
     template_packet = construct_packet(data, 1);
     hex_dump((unsigned char *)template_packet, 40);
     free(template_packet);
 
+    /* handling of the receiving socket & getting packets */
+    /* is alot different then how its usually done due to */
+    /* increasing performance. as such alot of it will be */
+    /* documented in cafebabe/src/linux_net.c and in an   */
+    /* upcoming paper.                                    */
     read_obj = read_socket(data->interface_name, 5, data->family);
     if(!read_obj){
         err_msg("read_socket()");
         clean_exit(mem, 1);
     }
+    /* also related to the handling packets, again this is mentioned */
+    /* later on                                                      */
     mem->rx_ring = read_obj->rx_ring;
     mem->rx_ring_size = read_obj->rx_ring_size;
     mem->recv_fd = read_obj->sock_fd;
@@ -181,20 +216,23 @@ int raw_scan(scan_data *data, int method, int tun){
     add_allocation(mem, (void *)tpk_ptr, sizeof(struct tpacket_req));
     free(read_obj);
 
+    /* the transmitting socket is very basic in comparison with the      */
+    /* receving socket and should be pretty familiar to anyone whos used */
+    /* sockets in the past                                               */
     sock_write = write_socket(AF_INET, IPPROTO_TCP);
     mem->write_fd = sock_write;
 
+    /* as the scan is dependant on both sockets, if either one has failed */
+    /* we have to abort                                                   */
     if((read_obj->sock_fd < 0) || (sock_write < 0)){
         err_msg("socket()");
         clean_exit(mem, 1);
     }
+
+    /* set the socket filter */
     r = set_filter(read_obj->sock_fd, &filter_d, tun);
     if(r < 0) clean_exit(mem, 1);
+
     read_write_cycle(read_obj->sock_fd, sock_write, data, tpk_ptr, tun);
     return 0;
-}
-
-void signal_handler(int signal){
-    printf("\n");
-    clean_exit(mem, 130);
 }

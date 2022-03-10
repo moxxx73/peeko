@@ -2,6 +2,8 @@
 
 extern results_d *results;
 
+/* wrapper for exit() that ensures we leave no open file descriptors */
+/* or that we have freed all made allocations                        */
 void clean_exit(mem_obj *mem, int ret){
     if(mem->rx_ring) munmap(mem->rx_ring, mem->rx_ring_size);
     if(mem->recv_fd > 0) close(mem->recv_fd);
@@ -12,6 +14,7 @@ void clean_exit(mem_obj *mem, int ret){
     exit(ret);
 }
 
+/* allocate the mem_obj struct and initialise struct data */
 mem_obj *alloc_mem_obj(mem_obj *mem){
     mem = (mem_obj *)malloc(sizeof(mem_obj));
     if(mem != NULL){
@@ -49,6 +52,7 @@ void *add_allocation(mem_obj *p, void *ptr, short size){
     return NULL;
 }
 
+/* return an allocations index within in the linked list */
 int get_ptr_index(ptr_list *p, void *ptr){
     ptr_list *x;
     int ret = 0;
@@ -61,16 +65,8 @@ int get_ptr_index(ptr_list *p, void *ptr){
     return -1;
 }
 
-ptr_list *ptr_via_index(ptr_list *p, void *ptr){
-    ptr_list *x;
-    x = p;
-    while(!x){
-        if(x->ptr == ptr) return x;
-        x = x->next;
-    }
-    return NULL;
-}
-
+/* remove & free an allocation pointed to by its index */
+/* from the linked list                                */
 int remove_allocation(mem_obj *p, int index){
     ptr_list *x, *y=NULL, *z=NULL;
     int i = 0;

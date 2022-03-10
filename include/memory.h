@@ -11,6 +11,7 @@
 #include "stack.h"
 #include "results.h"
 
+/* double linked list containing allocation metadata */
 typedef struct ptr_listist{
     struct ptr_listist *prev;
     void *ptr;
@@ -18,34 +19,32 @@ typedef struct ptr_listist{
     struct ptr_listist *next;
 } ptr_list;
 
-/* data pool that can be accessed by all functions */
-/* why use the term pool? cuz its makes stuff seem fancier */
+/* memory structure storing any allocations, */
+/* allocation metatdata and file descriptors */
 typedef struct mem_data{
     int rx_ring_size;
     void *rx_ring;
-    int recv_fd;   /* - so we can properly close the */
-    int write_fd;  /*   descriptors when aborting the scan */
-    int allocations; /* - The number of memory regions currently allocated */
-    int allocated; /* amount of memory in bytes that is in use */
-    int freed; /* the amount of memory in bytes that is no longer in use */
-    ptr_list *ptrs; /* - any memory allocations we have made that have */
-} mem_obj;            /*   not been freed. excluding the pool itself */
+    int recv_fd;
+    int write_fd; 
+    int allocations; 
+    int allocated; 
+    int freed; 
+    ptr_list *ptrs; 
+} mem_obj; 
 
-/* incase any fatal errors occur we can exit */
-/* safely (close descriptors and free allocated memory) */
+/* wrapper around exit() that ensures that file      */
+/* descriptors are closed and all memory allocations */
+/* made are properly freed                           */
 void clean_exit(mem_obj *, int);
 
-/* just allocates the structure */
+/* allocates the mem_obj structure */
 mem_obj *alloc_mem_obj(mem_obj *);
 
-/* appends the pointer to a new memory allocation */
-/* to the memory pools pointer list and updates */
-/* memory data (e.g. amount allocated) */
+/* append a new allocation to the double linked list */
 void *add_allocation(mem_obj *, void *, short);
 
+/* returns a pointers index in the linked list */
 int get_ptr_index(ptr_list *, void *);
-
-ptr_list *ptr_via_index(ptr_list *, void *);
 
 int remove_allocation(mem_obj *, int);
 

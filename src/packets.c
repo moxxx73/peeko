@@ -1,15 +1,6 @@
 #include "../include/packets.h"
 
-short get_sport(char *packet){
-    struct tcphdr *tcp;
-    short sport=0;
-    tcp = (struct tcphdr *)(packet+ETH_SIZE+IP_SIZE);
-    sport = tcp->th_sport;
-    return ntohs(sport);
-}
-
 /* TCP checksum algorithm */
-/* the bane of my fucking life */
 unsigned short checksum(unsigned short *p, int l){
     unsigned long sum=0;
     while(l>1){
@@ -23,7 +14,7 @@ unsigned short checksum(unsigned short *p, int l){
     return (unsigned short)(~sum);
 }
 
-/* does not need an explanation */
+/* assigns IPv4 header fields */
 void ipv4Hdr(char *b, unsigned short l, unsigned short id, unsigned short off, unsigned char ttl, unsigned char p, unsigned short sum, unsigned int src, unsigned int dst){
     struct ip *iphdr = (struct ip *)(b);
     iphdr->ip_hl = 5;
@@ -40,7 +31,7 @@ void ipv4Hdr(char *b, unsigned short l, unsigned short id, unsigned short off, u
     return;
 }
 
-/* same as the above */
+/* assigns TCP header fields */
 void tcpHdr(char *b, unsigned short sport, unsigned short dport, unsigned int seq, unsigned int ack, unsigned char off, unsigned char flags, unsigned short win, unsigned short sum, unsigned short urp){
     struct tcphdr *tcph = (struct tcphdr *)(b);
     tcph->th_sport = htons(sport);
@@ -53,17 +44,4 @@ void tcpHdr(char *b, unsigned short sport, unsigned short dport, unsigned int se
     tcph->th_sum = htons(sum);
     tcph->th_urp = htons(urp);
     return;
-}
-
-int _state(char *packet, int method){
-    /* filter only allows for ipv4+tcp packets */
-    struct tcphdr *tcp = (struct tcphdr *)(packet+ETHSIZ+IPSIZ);
-    switch(method){
-        case SYN_METH:
-            if(tcp->th_flags == (TH_SYN|TH_ACK)) return 1;
-            break;
-        default:
-            return 0;
-    }
-    return 0;
 }

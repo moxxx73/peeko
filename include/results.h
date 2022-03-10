@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include "utils.h"
 
+/* results struct containing data about the scan */
 typedef struct scan_results{
     char *ip_string;
     int packets_recvd;
@@ -13,12 +14,14 @@ typedef struct scan_results{
 } results_d;
 
 #define RESULTS_SIZ sizeof(results_d)
-#define RESULTS_TAG "results_struct\0"
 
+/* allocate and initialise result struct */
 results_d *init_results(void);
 
+/* append an open port to the open_ports array */
 int add_open_port(results_d *, short);
 
+/* displays open ports at the end of the scan */
 void display_results(results_d *);
 
 #endif

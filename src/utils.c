@@ -1,12 +1,6 @@
 #include "../include/utils.h"
 
-/*---------------------------------------------------------*/
-/* Retrieves the IPv4 address of a hostname                */
-/*     name: The hostname                                  */
-/*     buf: The buffer to store the resultant IPv4 address */
-/*                                                         */
-/* Returns 1 if no errors occurred                         */
-/*---------------------------------------------------------*/
+/* resolves a IPv4 address from a provided hostname */
 int resolve_name(char *name, char *buf){
     struct hostent *r;
     r = gethostbyname(name);
@@ -18,40 +12,34 @@ int resolve_name(char *name, char *buf){
     return 0;
 }
 
-/*---------------------------------------------------------*/
-/* Retrieves the IPv4 address associated with an interface */
-/*     ifn: Interface name                                 */
-/*     buf: buffer to store IPv4 address                   */
-/*                                                         */
-/* Returns 1 if no errors occurred                         */
-/*---------------------------------------------------------*/
+/* automatically fetch an interfaces IPv4 address   */
+/* for the source address field in raw IPv4 headers */
 int getifaddr(char *ifn, char *buf){
     struct ifreq ifr;
     int s;
 
     s = socket(AF_INET, SOCK_STREAM, 0);
     if(s < 0) return 0;
+    
     ifr.ifr_addr.sa_family = AF_INET;
     memcpy(ifr.ifr_name, ifn, IFNAMSIZ);
-
-    if(ioctl(s, SIOCGIFADDR, &ifr) < 0){
-        return 0;
-    }
+    if(ioctl(s, SIOCGIFADDR, &ifr) < 0) return 0;
+    
     close(s);
-    if(inet_ntop(AF_INET, &((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr, buf, INET_ADDRSTRLEN) == NULL){
-        return 0;
-    }
+    if(inet_ntop(AF_INET, &((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr, buf, INET_ADDRSTRLEN) == NULL) return 0;
     return 1;
 }
 
+/* returns the amount of times a character occurs in a string */
 int chr_count(char *str, char c, int len){
-    int i, count=0;
-    for(i=0;i<len;i++){
+    int i=0, count=0;
+    for(;i<len;i++){
         if(str[i] == c) count += 1;
     }
     return count;
 }
 
+/* returns the first index of a character in a string */
 int chr_index(char *str, char c, int len){
     int index=0;
     for(;index<len;index++){
@@ -60,12 +48,17 @@ int chr_index(char *str, char c, int len){
     return index;
 }
 
+/* parse_list, parse_range and parse_file all take string based   */
+/* arguments containing the intended ports to scan, converts them */
+/* from ASCII to integer (shrunk to a word/short) and stores them */
+/* in a list                                                      */
 short *parse_list(char *list, int len, int llen){
-    int i, x, no_len;
-    short *ret;
+    int i=0, x=0, no_len=0;
+    short *ret=NULL;
     int c = 0;
     char *ptr = list;
-    char *tmp;
+    char *tmp=NULL;
+
     if((ret = (short *)malloc(sizeof(short)*llen)) == NULL) return NULL;
     for(i=0;i<len;i++){
         if(list[i] == ','){
@@ -93,9 +86,9 @@ short *parse_list(char *list, int len, int llen){
 }
 
 parse_r *parse_range(char *argv, int len){
-    parse_r *ret;
-    char *ptr;
-    int index, a, b, i, llen;
+    parse_r *ret=NULL;
+    char *ptr=NULL;
+    int index=0, a=0, b=0, i=0, llen=0;
     if((ret = (parse_r *)(malloc(sizeof(parse_r)))) == NULL) return NULL;
     index = chr_index(argv, '-', len);
     ptr = (char *)malloc(index+1);
@@ -123,16 +116,22 @@ parse_r *parse_range(char *argv, int len){
     return ret;
 }
 
+/* parses CLI arguments for the -p flag */
+/* and return the ports in an array     */
 parse_r *parse_port_args(char *argv){
-    short *list;
-    int x;
+    short *list=NULL;
+    int x=0;
     int arg_len = strlen(argv);
-    parse_r *ret;
+    parse_r *ret=NULL;
+    
+    /* if the user provided a range of ports, e.g. -p 1-1000 */
     x = chr_count(argv, '-', arg_len);
     if(x == 1){
         ret = parse_range(argv, arg_len);
         return ret;
     }
+
+    /* or if they provide a list of ports, e.g. -p 21,22,23,53,80 */
     if((ret = (parse_r *)malloc(sizeof(parse_r))) == NULL) return NULL;
     x = chr_count(argv, ',', arg_len);
     if(x != 0){
@@ -212,6 +211,7 @@ parse_file_err:
     return NULL;
 }
 
+/* whenever an occurs, output a message and the reason why it occurred */
 void err_msg(const char *msg){
     char err_buf[ERR_MSG_LEN];
     snprintf(err_buf, ERR_MSG_LEN, "[%sERROR%s] %s: %s\n", REDC, RESET, msg, strerror(errno));
@@ -219,6 +219,8 @@ void err_msg(const char *msg){
     return;
 }
 
+/* takes a buffer and outputs both the hex and ascii representation */
+/* of each byte                                                     */
 void hex_dump(unsigned char *data, int length){
     int c=0, x=0, y=0, z=0;
     unsigned char ch;
