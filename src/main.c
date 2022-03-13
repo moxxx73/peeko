@@ -61,7 +61,7 @@ int main(int argc, char *argv[]){
     memcpy(ifn, IFN_NAME, 16);
 
     /* peeko object (struct) is defined in peeko/include/peeko.h */
-    args = (peeko *)malloc(sizeof(peeko_obj));
+    args = (peeko_obj *)malloc(sizeof(peeko_obj));
     if(args == NULL){
         err_msg("main():malloc()");
         return 1;
