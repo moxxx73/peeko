@@ -185,8 +185,8 @@ int raw_scan(scan_data *data, int method, int tun){
     /* narrows down the reception               */
     /* to only the dst_ip & src_ip:src_port     */
     /* filter operations defined in:            */
-    /*    + cafebabe/include/net_filter.h       */
-    /*    + cafebabe/src/net_filter.c           */
+    /*    + peeko/include/net_filter.h       */
+    /*    + peeko/src/net_filter.c           */
     filter_d.dst = data->dst_ip;
     filter_d.src = data->src_ip;
     filter_d.dport = data->sport;
@@ -199,7 +199,7 @@ int raw_scan(scan_data *data, int method, int tun){
     /* handling of the receiving socket & getting packets */
     /* is alot different then how its usually done due to */
     /* increasing performance. as such alot of it will be */
-    /* documented in cafebabe/src/linux_net.c and in an   */
+    /* documented in peeko/src/linux_net.c and in an   */
     /* upcoming paper.                                    */
     read_obj = read_socket(data->interface_name, 5, data->family);
     if(!read_obj){

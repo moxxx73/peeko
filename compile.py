@@ -5,7 +5,7 @@ import os
 import subprocess
 import sys
 
-CAFEBABE_VER = '1.42'
+PEEKO_VER = '1.45'
 
 gcc_flags:list = [
     "-Wall", "-Wextra", "-Wpedantic", "-Wformat=2", "-Wno-unused-parameter", "-Wshadow",
@@ -37,7 +37,7 @@ def compile_src(compile_bpf:bool) -> None:
     return compiled
 
 def link_and_install(obj_files:list) -> None:
-    cmd = ['gcc', '-o', 'cafebabe'] + obj_files + gcc_flags
+    cmd = ['gcc', '-o', 'peeko'] + obj_files + gcc_flags
     r = subprocess.run(cmd)
     if(r != 0):
         fatal_error = True

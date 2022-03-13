@@ -1,4 +1,4 @@
-#include "../include/cafebabe.h"
+#include "../include/peeko.h"
 
 extern char verbose;
 
@@ -18,7 +18,7 @@ void signal_handler(int signal){
     clean_exit(mem, 130);
 }
 
-void cafebabe_main(cafebabe *args, char *name, parse_r *lst, char resolve){
+void peeko_main(peeko_obj *args, char *name, parse_r *lst, char resolve){
     int r=0;
     int method=0;
     char src_str[INET_ADDRSTRLEN];
@@ -48,7 +48,7 @@ void cafebabe_main(cafebabe *args, char *name, parse_r *lst, char resolve){
     }
     printf("[%sINFO%s] Scanning Target %s\n", BLUEC, RESET, name);
 
-    /* mem_obj and related memory operations are all defined in cafebabe/include/memory.h */
+    /* mem_obj and related memory operations are all defined in peeko/include/memory.h */
     if((mem = alloc_mem_obj(mem)) == NULL){
         err_msg("alloc_mem_obj()");
         free(lst);
@@ -57,11 +57,11 @@ void cafebabe_main(cafebabe *args, char *name, parse_r *lst, char resolve){
     }
     /* append allocated memory to linked list */
     add_allocation(mem, (void *)lst, sizeof(parse_r));
-    add_allocation(mem, (void *)args, CAFEBABE_SIZ);
+    add_allocation(mem, (void *)args, PEEKO_OBJ_SIZE);
     add_allocation(mem, (void *)args->ifn, IF_NAMESIZE);
     add_allocation(mem, (void *)args->addr, INET_ADDRSTRLEN);
 
-    /* defined in cafebabe/include/net.h */
+    /* defined in peeko/include/net.h */
     scan_info = (scan_data *)malloc(SCAN_DATA_SIZ);
     if(!scan_info){
         printf("[%sERROR%s] Failed to initialise scan data\n", REDC, RESET);
@@ -77,7 +77,7 @@ void cafebabe_main(cafebabe *args, char *name, parse_r *lst, char resolve){
         printf("[%sERROR%s] Failed to allocate memory for queue\n", REDC, RESET);
         clean_exit(mem, 1);
     }
-    /* defined above cafebabe_main takes a list     */
+    /* defined above peeko_main takes a list     */
     /* of ports and fills the stack with said ports */
     if(fill_stack(lst, stck) < 0){
         printf("[%sERROR%s] List is larger than stack size\n", REDC, RESET);
@@ -106,8 +106,8 @@ void cafebabe_main(cafebabe *args, char *name, parse_r *lst, char resolve){
         clean_exit(mem, 1);
     }
     /* including the call to inet_pton above, the next         */
-    /* few lines up to signal() migrate data from the cafebabe */
-    /* structure to the scan_data structure allocated above    */
+    /* few lines up to signal() migrate data from the peeko    */
+    /* to the scan_data structure allocated above    */
     inet_pton(AF_INET, src_str, &scan_info->src_ip);
     scan_info->sport = args->sport;
     strncpy(scan_info->interface_name, args->ifn, IF_NAMESIZE);

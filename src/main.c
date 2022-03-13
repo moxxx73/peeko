@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "../include/cafebabe.h"
+#include "../include/peeko.h"
 
 /* considering changing some of the below        */
 /* defenitions so they're just regular variables */
@@ -12,9 +12,9 @@
 #define MAX_THREADS 5
 #define SPORT 666
 
-#define NAME "cafebabe"
+#define NAME "peeko"
 #define VERSION "1.44"
-#define COMMON_PATH "$CHANGE/cafebabe/common-cafebabe"
+#define COMMON_PATH "$CHANGE/peeko/common-peeko"
 #define IFN_NAME "wlan0\0"
 
 char verbose=0;
@@ -47,7 +47,7 @@ int main(int argc, char *argv[]){
     char quiet=0;
     char method=HANDSHAKE_SCAN;
     int i=1;
-    cafebabe *args=NULL;
+    peeko_obj *args=NULL;
     parse_r *list=NULL;
 
     if(argc < 2){
@@ -60,8 +60,8 @@ int main(int argc, char *argv[]){
     memset(ifn, 0x00, 16);
     memcpy(ifn, IFN_NAME, 16);
 
-    /* cafebabe structure is defined in cafebabe/include/cafebabe.h */
-    args = (cafebabe *)malloc(sizeof(cafebabe));
+    /* peeko object (struct) is defined in peeko/include/peeko.h */
+    args = (peeko *)malloc(sizeof(peeko_obj));
     if(args == NULL){
         err_msg("main():malloc()");
         return 1;
@@ -138,7 +138,7 @@ int main(int argc, char *argv[]){
         }
     }
     /* if no port argument was provided                       */
-    /* default to ports stored in COMMON_PATH/common-cafebabe */
+    /* default to ports stored in COMMON_PATH/common-peeko */
     if(!list){
         list = parse_file(COMMON_PATH);
         if(!list) return 1;
@@ -163,6 +163,6 @@ int main(int argc, char *argv[]){
     memcpy(args->ifn, ifn, IF_NAMESIZE);
     args->sport = (short)SPORT;
     args->method = method;
-    cafebabe_main(args, target, list, resolve_target);
+    peeko_main(args, target, list, resolve_target);
     return 0;
 }

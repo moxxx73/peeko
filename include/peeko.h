@@ -1,5 +1,5 @@
-#ifndef CAFEBABE_H
-#define CAFEBABE_H
+#ifndef PEEKO_H
+#define PEEKO_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,7 +13,7 @@
 
 /* the main purpose of this struct is to */
 /* keep the amount of function variables */
-/* passed to cafebabe_main low, im also  */
+/* passed to peeko_main low, im also  */
 /* kind of addicted to structs           */
 typedef struct function_args{
     char *addr; /* Hostname/IP address of the target (ASCII) */
@@ -21,8 +21,8 @@ typedef struct function_args{
     short sport; /* Source Port */ 
     int method; /* Selected scan method */
     int timeout; /* Timeout for socket operations */
-} cafebabe;
-#define CAFEBABE_SIZ sizeof(cafebabe)
+} peeko_obj;
+#define PEEKO_OBJ_SIZE sizeof(peeko_obj)
 
 /* moves ports from a list (lst) to a stack (st) */
 int fill_stack(parse_r *lst, stack *st);
@@ -31,7 +31,7 @@ int fill_stack(parse_r *lst, stack *st);
 void signal_handler(int signal);
 
 /* the "main" function that allocates necessary data structures */
-void cafebabe_main(cafebabe *args, char *name, parse_r *lst, char resolve);
+void peeko_main(peeko_obj *args, char *name, parse_r *lst, char resolve);
 
 #endif
 

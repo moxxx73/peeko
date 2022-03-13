@@ -1,6 +1,6 @@
 Peeko (previously CAFEBABE)
 -------------------------
-Version 1.44 (as of 10th March '22) 
+Version 1.45 (as of 13th March '22) 
 
 coming back to this project in over a month i have made some notable changes:
   - Allocations added to the memory struct in memory.h are actually freed
